@@ -87,6 +87,18 @@ Characters.register({
   </g>
 </svg>`,
 
+  // Still frames exported for the device (tools/export_assets.sh). Each pose is a
+  // mood plus optional CSS; animations are disabled during export. The device
+  // animates movement (bob, jump, wiggle) itself and swaps between these frames.
+  poses: {
+    idle:    { mood: 'idle' },
+    blink:   { mood: 'idle', css: '.char-dino .eyes-open{display:none} .char-dino .eyes-closed{display:inline}' },
+    sleepy:  { mood: 'sleepy' },
+    brush_a: { mood: 'brushing', css: '.char-dino .brush{transform:translateX(-9px)}' },
+    brush_b: { mood: 'brushing', css: '.char-dino .brush{transform:translateX(9px)}' },
+    cheer:   { mood: 'cheer' },
+  },
+
   css: `
 .char-dino {
   --skin: #5bd48a;

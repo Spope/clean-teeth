@@ -6,6 +6,8 @@
 //   theme  { accent, glow, ring: [4 colours, one per brushing zone] }
 //   svg    inline SVG markup (viewBox 0 0 240 240 recommended)
 //   css    styles scoped to `.char-<id>`, reacting to the mood classes below
+//   poses  still frames for the device: idle, blink, sleepy, brush_a, brush_b, cheer
+//          (each { mood, css? }; see characters/dino.js and tools/export_assets.sh)
 //
 // The app puts exactly one mood class on the character host element:
 //   mood-idle      awake, waiting for a tap
