@@ -5,10 +5,18 @@
 #pragma once
 
 #include "lvgl.h"
-#include "brushy_character.h"
+#include "brushy_theme.h"
 
-/** Build the UI on `screen` (expected 466x466) and start its update timer. */
-void brushy_ui_create(lv_obj_t * screen, const brushy_character_t * character);
+/** Build the UI on `screen` (expected 466x466) and start its update timer.
+ *  Starts with the theme saved last time, or the first one. */
+void brushy_ui_create(lv_obj_t * screen);
+
+/** Switch theme by id (e.g. "minecraft", "dragon"). Returns false if unknown. */
+bool brushy_ui_set_theme(const char * id);
+
+/** Play an animation now: "peek" (peek-a-boo), "peek_side", "slide", "mine", "rainbow",
+ *  "fly", "mirror" or "shake". Returns false if unknown or not in the current theme. */
+bool brushy_ui_trick(const char * name);
 
 /** Time multiplier for testing (1 = real time). */
 void brushy_ui_set_speed(float speed);

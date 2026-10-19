@@ -8,18 +8,25 @@
     sleepAfterSeconds: 30, // idle → sleepy
     doneTapGuardMs: 1500,  // ignore taps right after finishing
     celebrateSeconds: 12,  // done → idle automatically
+    longPressMs: 900,      // hold on the start screen to switch theme
+    trickEveryMs: [8000, 14000], // random pause between tricks
+    mirrorAtSeconds: 65,   // just past halfway: show off those clean teeth
   };
 
   const SIZE = 466;
   const CENTER = SIZE / 2;
   const RING_R = 215;
   const RING_C = 2 * Math.PI * RING_R;
-  const RING_GAP = 30; // includes the round caps (stroke width 18)
+  const BLOCKS_PER_ZONE = 8; // blocky ring style
   const GERM_R = 168;
+  const BUDDY = 108;         // top-left corner of the 250x250 buddy box on screen
+  const COUNTER = [214, 46]; // where rewards fly to (the icon in the counter)
+  const SVG_NS = 'http://www.w3.org/2000/svg';
 
   const $ = (id) => document.getElementById(id);
   const screen = $('screen');
   const charHost = $('character');
+  const rand = (min, max) => min + Math.random() * (max - min);
 
   const store = {
     get(key, fallback) {
@@ -34,6 +41,7 @@
   };
 
   const state = {
+    theme: null,
     phase: 'idle',   // idle | brushing | done
     mood: 'idle',
     elapsed: 0,      // seconds of brushing (simulated time)
@@ -42,36 +50,45 @@
     phaseSince: performance.now(),
     lastTs: performance.now(),
     stars: store.get('stars', 0),
+    mirrored: false,
   };
 
-  // ---------- Ring ----------
-  const segments = [];
-  function buildRing() {
-    const svg = $('ring');
-    const segLen = RING_C / CONFIG.zones - RING_GAP;
-    const gapDeg = (RING_GAP / 2 / RING_C) * 360;
-    for (let z = 0; z < CONFIG.zones; z++) {
-      const rot = `rotate(${180 + z * (360 / CONFIG.zones) + gapDeg} ${CENTER} ${CENTER})`;
-      const track = circle('seg-track', rot, `${segLen} ${RING_C}`);
-      const fill = circle('seg-fill', rot, `0 ${RING_C}`);
-      fill.style.opacity = 0;
-      svg.append(track, fill);
-      segments.push({ track, fill, len: segLen });
-    }
-    function circle(cls, transform, dash) {
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('class', cls);
-      c.setAttribute('cx', CENTER);
-      c.setAttribute('cy', CENTER);
-      c.setAttribute('r', RING_R);
-      c.setAttribute('transform', transform);
-      c.setAttribute('stroke-dasharray', dash);
-      return c;
-    }
+  // Timers that belong to the current phase; cleared whenever the phase changes
+  let phaseTimers = [];
+  const later = (ms, fn) => phaseTimers.push(setTimeout(fn, ms));
+
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
   }
 
-  function applyRingColors(colors) {
-    segments.forEach((s, i) => { s.fill.style.stroke = colors[i % colors.length]; });
+  // ---------- Ring ----------
+  let segments = [];
+  function buildRing(theme) {
+    const svg = $('ring');
+    svg.innerHTML = '';
+    segments = [];
+    const blocky = theme.style === 'blocky';
+    const gap = blocky ? 12 : 30; // round caps need a bigger gap
+    const segLen = RING_C / CONFIG.zones - gap;
+    const gapDeg = (gap / 2 / RING_C) * 360;
+    for (let z = 0; z < CONFIG.zones; z++) {
+      const base = { cx: CENTER, cy: CENTER, r: RING_R, transform: `rotate(${180 + z * (360 / CONFIG.zones) + gapDeg} ${CENTER} ${CENTER})` };
+      const track = svgEl('circle', { ...base, class: 'seg-track', 'stroke-dasharray': `${segLen} ${RING_C}` });
+      const fill = svgEl('circle', { ...base, class: 'seg-fill', 'stroke-dasharray': `0 ${RING_C}` });
+      fill.style.stroke = theme.ring[z % theme.ring.length];
+      fill.style.opacity = 0;
+      svg.append(track, fill);
+      if (blocky) {
+        // Black notches cut each zone into blocks, like the XP bar
+        const block = segLen / BLOCKS_PER_ZONE;
+        const dashes = [0, block - 2];
+        for (let k = 1; k < BLOCKS_PER_ZONE; k++) dashes.push(4, k < BLOCKS_PER_ZONE - 1 ? block - 4 : RING_C);
+        svg.append(svgEl('circle', { ...base, class: 'seg-gaps', 'stroke-dasharray': dashes.join(' ') }));
+      }
+      segments.push({ track, fill, len: segLen });
+    }
   }
 
   function setRingProgress(t) {
@@ -87,6 +104,54 @@
     segments.forEach((s, i) => s.track.classList.toggle('active', i === z));
   }
 
+  // ---------- Sprites and particles ----------
+  function sprite(svg, w, h, layer = 'fx') {
+    const el = document.createElement('div');
+    el.className = 'sprite';
+    el.style.width = `${w}px`;
+    el.style.height = `${h}px`;
+    el.innerHTML = svg;
+    el.dataset.w = w;
+    el.dataset.h = h;
+    $(layer).append(el);
+    return el;
+  }
+  const themeSprite = (name, layer) => {
+    const s = state.theme.sprites[name];
+    return sprite(s.svg, s.w, s.h, layer);
+  };
+
+  // Transform that centres a sprite on (x, y)
+  const at = (el, x, y, scale = 1, rot = 0) =>
+    `translate(${x - el.dataset.w / 2}px, ${y - el.dataset.h / 2}px) rotate(${rot}deg) scale(${scale})`;
+
+  // Pieces flying out of (x, y): pixels for blocky themes, round embers otherwise
+  function burst(x, y, colors, count = 12, spread = 1) {
+    const blocky = state.theme.style === 'blocky';
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      const size = blocky ? 6 : 7;
+      p.className = 'particle';
+      p.style.width = p.style.height = `${size}px`;
+      p.style.background = colors[i % colors.length];
+      p.style.borderRadius = blocky ? '0' : '50%';
+      $('fx').append(p);
+      const a = (i / count) * Math.PI * 2 + rand(-0.3, 0.3);
+      const d = rand(35, 70) * spread;
+      const x0 = x - size / 2, y0 = y - size / 2;
+      p.animate([
+        { transform: `translate(${x0}px, ${y0}px)`, opacity: 1 },
+        { transform: `translate(${x0 + Math.cos(a) * d}px, ${y0 + Math.sin(a) * d + 25}px)`, opacity: 0 },
+      ], { duration: rand(450, 650), easing: blocky ? 'steps(6)' : 'cubic-bezier(.2, .7, .4, 1)' })
+        .onfinish = () => p.remove();
+    }
+  }
+
+  function clearFx() {
+    $('fx').innerHTML = '';
+    $('fx-back').innerHTML = '';
+  }
+
   // ---------- Germs ----------
   const germs = [];
   function buildGerms() {
@@ -99,54 +164,394 @@
         const rad = (deg * Math.PI) / 180;
         const x = CENTER + GERM_R * Math.cos(rad);
         const y = CENTER + GERM_R * Math.sin(rad);
-        const color = Germs.colors[(z + i) % Germs.colors.length];
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('class', 'germ');
-        g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
-        g.innerHTML = Germs.svg(color, (z * 0.37 + i * 0.23) % 1.4);
+        const g = svgEl('g', { class: 'germ', transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
+        const inner = svgEl('g', { class: 'germ-inner', style: `--d:-${((z * 0.37 + i * 0.23) % 1.4).toFixed(2)}s` });
+        g.append(inner);
         svg.append(g);
-        germs.push({ el: g, popAt: z * zoneLen + ((i + 1) * zoneLen) / CONFIG.germsPerZone, popped: false });
+        germs.push({ el: g, inner, x, y, kind: (z + i) % 4, popAt: z * zoneLen + ((i + 1) * zoneLen) / CONFIG.germsPerZone, popped: false });
       }
     }
   }
 
-  function resetGerms() {
-    germs.forEach((g) => { g.popped = false; g.el.classList.remove('popped'); });
+  function drawGerm(g, scared = false) {
+    const set = scared ? state.theme.germsScared : state.theme.germs;
+    g.inner.innerHTML = `${set[g.kind]}<rect class="flash" x="-20" y="-20" width="40" height="40" fill="#fff"/>`;
   }
 
+  function resetGerms() {
+    germs.forEach((g) => {
+      clearTimeout(g.calmTimer);
+      g.popped = false;
+      g.el.classList.remove('popped', 'scared', 'priming');
+      drawGerm(g);
+    });
+  }
+
+  // Quiet pop (end of brushing, previews)
   function popGerm(g) {
     g.popped = true;
+    g.el.classList.remove('priming', 'scared');
     g.el.classList.add('popped');
-    Sound.pop();
   }
 
-  // ---------- Character ----------
-  let character = null;
-  function loadCharacter(id) {
-    character = Characters.get(id) || Characters.list()[0];
-    charHost.innerHTML = character.svg;
-    charHost.className = `character char-${character.id}`;
+  // The others shiver with a scared face for a moment
+  function scareGerms() {
+    germs.forEach((g) => {
+      if (g.popped) return;
+      drawGerm(g, true);
+      g.el.classList.add('scared');
+      clearTimeout(g.calmTimer);
+      g.calmTimer = setTimeout(() => {
+        g.el.classList.remove('scared');
+        if (!g.popped) drawGerm(g);
+      }, 900);
+    });
+  }
 
-    let style = $('char-style');
+  function explode(g) {
+    popGerm(g);
+    burst(g.x, g.y, state.theme.germParticles[g.kind]);
+    Sound.pop();
+    shake();
+    scareGerms();
+  }
+
+  // Each theme defeats germs its own way
+  function defeatGerm(g) {
+    g.popped = true; // claimed: won't be triggered again
+    const theme = state.theme;
+    if (theme.pop === 'creeper' && g.kind === 0) {
+      g.el.classList.add('priming');
+      Sound.hiss();
+      later(700, () => explode(g));
+    } else if (theme.pop === 'fireball') {
+      breatheFire(g);
+    } else {
+      explode(g);
+    }
+  }
+
+  function breatheFire(g) {
+    stopTrick();
+    const calm = state.mood === 'brushing';
+    if (calm) setMood('fire');
+    const [mx, my] = state.theme.mouth;
+    const fb = themeSprite('fireball');
+    fb.animate([
+      { transform: at(fb, BUDDY + mx, BUDDY + my, 0.4) },
+      { transform: at(fb, g.x, g.y, 1.1) },
+    ], { duration: 380, easing: 'ease-in', fill: 'forwards' }).onfinish = () => {
+      fb.remove();
+      if (state.phase !== 'brushing') return; // brushing ended meanwhile
+      explode(g);
+      if (state.phase === 'brushing' && state.mood === 'fire') setMood('brushing');
+    };
+  }
+
+  // ---------- Tricks ----------
+  // Keyframes [ms, x, y, scale, rotation°, easing of the next segment], applied to the buddy
+  // around its feet (bottom centre). Mirrored in device/ui/brushy_ui.c.
+  // A trick may also have `cls` (classes on the buddy meanwhile) and timed `events`.
+  const EASE = { in: 'ease-in', out: 'ease-out', back: 'cubic-bezier(.34, 1.56, .64, 1)', linear: 'linear' };
+  const OFF = 420; // fully outside the 466px screen
+
+  const TRICKS = {
+    // Duck out of view, pop up big and close from the bottom edge (side: -1 left, 0 middle,
+    // 1 right, leaning in), duck again, then bounce back into place.
+    peek: (side) => {
+      const x = side * 90, r = -side * 15;
+      return { frames: [
+        [0, 0, 0, 1, 0, 'in'],
+        [350, 0, 400, 1, 0, 'linear'],
+        [360, x, 700, 1.9, r, 'back'],
+        [850, x, 287, 1.9, r, 'linear'],
+        [2000, x, 287, 1.9, r, 'in'],
+        [2400, x, 700, 1.9, r, 'linear'],
+        [2410, 0, 400, 1, 0, 'back'],
+        [2900, 0, 0, 1, 0],
+      ] };
+    },
+
+    // Slip off one side, then lean in from that edge to spy, twice, and walk back.
+    peekSide: (d) => {
+      const x = d * 255, r = -d * 22;
+      return { frames: [
+        [0, 0, 0, 1, 0, 'in'],
+        [400, d * OFF, 0, 1, 0, 'linear'],
+        [410, d * OFF, 20, 1, r, 'out'],
+        [900, x, 20, 1, r, 'linear'],
+        [1800, x, 20, 1, r, 'in'],
+        [2100, d * OFF, 20, 1, r, 'linear'],
+        [2500, d * OFF, 20, 1, r, 'out'],
+        [2800, x, 20, 1, r, 'linear'],
+        [3500, x, 20, 1, r, 'in'],
+        [3800, d * OFF, 20, 1, r, 'linear'],
+        [3810, d * OFF, 0, 1, 0, 'out'],
+        [4400, 0, 0, 1, 0],
+      ] };
+    },
+
+    // Walk off one side, come back in from that side and hop all the way across until gone
+    // on the other side, then walk back in to the middle.
+    slide: (d) => {
+      const frames = [
+        [0, 0, 0, 1, 0, 'in'],
+        [150, d * 15, -6, 1, d * 6, 'in'],
+        [700, d * OFF, 0, 1, d * 6, 'linear'],
+      ];
+      for (let k = 0; k <= 8; k++) { // crossing: 8 little hops in 2 s
+        frames.push([1100 + k * 250, d * (OFF - k * 2 * OFF / 8), k % 2 ? -10 : 0, 1, -d * 6, 'linear']);
+      }
+      frames.push([3500, -d * OFF, 0, 1, d * 6, 'out'], [4200, -d * 15, -6, 1, d * 6, 'out'], [4400, 0, 0, 1, 0]);
+      return { frames };
+    },
+
+    // Minecraft: a grass block appears, Steve hits it three times and breaks it.
+    mine: () => ({
+      cls: 'trick-mine',
+      frames: [[0, 0, 0, 1, 0, 'linear'], [3000, 0, 0, 1, 0]],
+      events: [[0, 'block'], [500, 'hit'], [1100, 'hit'], [1700, 'break']],
+    }),
+
+    // Dragon: Glory's scales cycle through the rainbow while she hops on the spot.
+    rainbow: () => {
+      const frames = [];
+      for (let k = 0; k <= 8; k++) frames.push([k * 400, 0, k % 2 ? -12 : 0, 1, 0, k % 2 ? 'in' : 'out']);
+      const events = [[0, 'magic']];
+      for (let k = 0; k < 10; k++) events.push([k * 320, `rainbow-${(k % 5) + 1}`]);
+      return { frames, events };
+    },
+
+    // Dragon: take off, fly across the top of the screen flapping, glide back down.
+    fly: (d) => {
+      const frames = [
+        [0, 0, 0, 1, 0, 'in'],
+        [400, d * 40, -50, 1, d * 8, 'in'],
+        [900, d * OFF, -120, 1, d * 10, 'linear'],
+      ];
+      for (let k = 0; k <= 8; k++) {
+        frames.push([1300 + k * 225, d * (OFF - k * 2 * OFF / 8), -110 + (k % 2 ? -25 : 0), 1, -d * 10, 'linear']);
+      }
+      frames.push([3500, -d * OFF, -120, 1, d * 10, 'out'], [4300, -d * 40, -40, 1, d * 6, 'out'], [4700, 0, 0, 1, 0]);
+      return { cls: 'trick-fly', frames, events: [[0, 'whoosh'], [3500, 'whoosh']] };
+    },
+  };
+  const GENERIC_TRICKS = ['peek', 'peekSide', 'slide'];
+
+  let trick = null; // { anim, cls, timers, block }
+  let nextTrickAt = 0;
+
+  function scheduleTrick() {
+    const [min, max] = CONFIG.trickEveryMs;
+    nextTrickAt = performance.now() + rand(min, max);
+  }
+
+  function hasTrick(name) {
+    return GENERIC_TRICKS.includes(name) || (state.theme.tricks || []).includes(name);
+  }
+
+  function pickTrick() {
+    const list = [...GENERIC_TRICKS];
+    if (state.phase === 'idle') list.push(...(state.theme.tricks || [])); // theme tricks drop the brush
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  // Timed things that happen during a trick
+  function trickEvent(t, name) {
+    if (name === 'block') {
+      t.block = themeSprite('block', 'fx-back');
+      const [x, y] = [BUDDY + 224, BUDDY + 226];
+      t.block.animate([{ transform: at(t.block, x, y, 0) }, { transform: at(t.block, x, y, 1) }],
+        { duration: 200, easing: 'steps(3)', fill: 'forwards' });
+      t.blockAt = [x, y];
+    } else if (name === 'hit' || name === 'break') {
+      charHost.classList.add('hit');
+      t.timers.push(setTimeout(() => charHost.classList.remove('hit'), 180));
+      Sound.hit();
+      const [x, y] = t.blockAt;
+      const dirt = ['#8b5a2b', '#6e4520', '#5dbb3a'];
+      if (name === 'hit') {
+        burst(x, y - 20, dirt, 4, 0.5);
+        t.hits = (t.hits || 0) + 1;
+        if (t.hits === 2) t.block.innerHTML = state.theme.sprites.block_cracked.svg;
+      } else {
+        t.block.remove();
+        t.block = null;
+        burst(x, y, dirt, 16, 1);
+        Sound.crumble();
+        shake();
+      }
+    } else if (name.startsWith('rainbow-')) {
+      charHost.classList.remove('rainbow-1', 'rainbow-2', 'rainbow-3', 'rainbow-4', 'rainbow-5');
+      charHost.classList.add(name);
+      t.cls = name;
+    } else if (name === 'magic') {
+      Sound.magic();
+    } else if (name === 'whoosh') {
+      Sound.pop();
+    }
+  }
+
+  function runTrick(name) {
+    if (!hasTrick(name)) return;
+    stopTrick();
+    const side = name === 'peek' ? Math.floor(Math.random() * 3) - 1 : (Math.random() < 0.5 ? -1 : 1);
+    const def = TRICKS[name](side);
+    const total = def.frames[def.frames.length - 1][0];
+    const t = { cls: def.cls, timers: [] };
+    if (def.cls) charHost.classList.add(...def.cls.split(' '));
+    t.anim = $('buddy').animate(def.frames.map(([ms, x, y, sc, r, e]) => ({
+      offset: ms / total,
+      transform: `translate(${x}px, ${y}px) rotate(${r}deg) scale(${sc})`,
+      easing: EASE[e] || 'linear',
+    })), { duration: total });
+    for (const [ms, ev] of def.events || []) t.timers.push(setTimeout(() => trickEvent(t, ev), ms));
+    t.anim.onfinish = () => { stopTrick(); scheduleTrick(); };
+    trick = t;
+  }
+
+  function stopTrick() {
+    if (!trick) return;
+    const t = trick;
+    trick = null;
+    t.anim.cancel();
+    t.timers.forEach(clearTimeout);
+    if (t.cls) charHost.classList.remove(...t.cls.split(' '));
+    charHost.classList.remove('hit');
+    if (t.block) t.block.remove();
+  }
+
+  function canTrick() {
+    return state.phase === 'brushing' || (state.phase === 'idle' && state.mood === 'idle');
+  }
+
+  // Quick damped wobble of everything on screen (germ popped)
+  function shake() {
+    const frames = [];
+    for (let i = 0; i <= 12; i++) {
+      const p = i / 12;
+      const x = 7 * (1 - p) * Math.sin(p * Math.PI * 8);
+      const y = 3.5 * (1 - p) * Math.sin(p * Math.PI * 6);
+      frames.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)` });
+    }
+    $('stage').animate(frames, { duration: 350 });
+  }
+
+  // ---------- Mirror check (once per brushing, just past halfway) ----------
+  function mirrorCheck() {
+    state.mirrored = true;
+    stopTrick();
+    setMood('grin');
+    Sound.bling();
+    const [tx, ty] = state.theme.teeth;
+    const glint = (dx, dy, delay) => {
+      const s = themeSprite('sparkle');
+      const x = BUDDY + tx + dx, y = BUDDY + ty + dy;
+      s.animate([
+        { transform: at(s, x, y, 0, 0) },
+        { transform: at(s, x, y, 1.2, 90), offset: 0.5 },
+        { transform: at(s, x, y, 0, 180) },
+      ], { duration: 800, delay, fill: 'both', easing: 'ease-in-out' }).onfinish = () => s.remove();
+    };
+    glint(-22, -6, 0);
+    glint(24, 4, 300);
+    glint(-4, -14, 700);
+    later(1700, () => { if (state.phase === 'brushing' && state.mood === 'grin') setMood('brushing'); });
+  }
+
+  // ---------- Reward drop: the reward pops out of the buddy and flies to the counter ----------
+  function rewardDrop() {
+    const el = sprite(state.theme.reward, 32, 32);
+    const d = Math.random() < 0.5 ? -1 : 1;
+    const blocky = state.theme.style === 'blocky';
+    const path = [ // [ms, x, y, scale, easing]
+      [0, CENTER, 260, 0.3, 'out'],
+      [300, CENTER + d * 30, 165, 1.6, 'in'],
+      [650, CENTER + d * 55, 330, 1.6, 'out'],
+      [800, CENTER + d * 60, 305, 1.6, 'in'],
+      [950, CENTER + d * 62, 330, 1.6, 'linear'],
+      [1500, CENTER + d * 62, 330, 1.6, 'in'],
+      [1900, COUNTER[0], COUNTER[1], 1],
+    ];
+    const total = path[path.length - 1][0];
+    el.animate(path.map(([ms, x, y, sc, e]) => ({
+      offset: ms / total,
+      transform: at(el, x, y, sc),
+      easing: blocky ? 'steps(4)' : (EASE[e] || 'linear'), // Minecraft: pixel steps
+    })), { duration: total, fill: 'forwards' }).onfinish = () => {
+      el.remove();
+      if (state.phase !== 'done') return;
+      renderStars(true);
+      Sound.collect();
+    };
+  }
+
+  // ---------- Theme ----------
+  function loadTheme(id) {
+    const theme = Themes.get(id) || Themes.list()[0];
+    stopTrick();
+    clearFx();
+    state.theme = theme;
+
+    let style = $('theme-style');
     if (!style) {
       style = document.createElement('style');
-      style.id = 'char-style';
+      style.id = 'theme-style';
       document.head.append(style);
     }
-    style.textContent = character.css;
+    style.textContent = theme.css;
+
+    let font = $('theme-font');
+    if (!font) {
+      font = document.createElement('link');
+      font.id = 'theme-font';
+      font.rel = 'stylesheet';
+      document.head.append(font);
+    }
+    if (theme.fontUrl) font.href = theme.fontUrl;
 
     const root = document.documentElement.style;
-    root.setProperty('--accent', character.theme.accent);
-    root.setProperty('--glow', character.theme.glow);
-    applyRingColors(character.theme.ring);
+    root.setProperty('--accent', theme.accent);
+    root.setProperty('--glow', theme.glow);
+
+    charHost.innerHTML = theme.character;
+    germs.forEach((g) => drawGerm(g));
+    $('reward-icon').innerHTML = theme.reward;
+    $('bravo-text').textContent = theme.bravo;
+    buildRing(theme);
+    if (state.phase === 'brushing' || state.phase === 'done') {
+      setRingProgress(Math.min(state.elapsed, CONFIG.totalSeconds));
+      setActiveZone(state.phase === 'brushing' ? state.zone : -1);
+    }
+    Sound.setTheme(theme.sound);
+    applyScreenClasses();
     setMood(state.mood);
-    store.set('character', character.id);
+    store.set('theme', theme.id);
+    const sel = $('dev-theme');
+    if (sel) sel.value = theme.id;
+    document.querySelectorAll('[data-trick]').forEach((b) => {
+      b.disabled = !['shake', 'mirror'].includes(b.dataset.trick) && !hasTrick(b.dataset.trick);
+    });
+  }
+
+  function nextTheme() {
+    const list = Themes.list();
+    const i = list.findIndex((t) => t.id === state.theme.id);
+    loadTheme(list[(i + 1) % list.length].id);
+    state.phaseSince = performance.now(); // don't fall asleep right away
+    setMood('idle');
+    giggle();
+  }
+
+  function applyScreenClasses() {
+    screen.className = `screen phase-${state.phase} theme-${state.theme.id} style-${state.theme.style}`;
   }
 
   function setMood(mood) {
+    if (mood === 'sleepy' || mood === 'cheer') stopTrick();
     state.mood = mood;
-    [...charHost.classList].filter((c) => c.startsWith('mood-')).forEach((c) => charHost.classList.remove(c));
-    charHost.classList.add(`mood-${mood}`);
+    const keep = trick && trick.cls ? ` ${trick.cls}` : '';
+    charHost.className = `character mood-${mood}${keep}`;
   }
 
   function giggle() {
@@ -161,44 +566,52 @@
 
   // ---------- Phases ----------
   function setPhase(phase) {
+    stopTrick();
+    scheduleTrick();
+    phaseTimers.forEach(clearTimeout);
+    phaseTimers = [];
     state.phase = phase;
     state.phaseSince = performance.now();
-    screen.classList.remove('phase-idle', 'phase-brushing', 'phase-done');
-    screen.classList.add(`phase-${phase}`);
+    applyScreenClasses();
     $('dev-phase').textContent = phase;
   }
 
   function toIdle() {
     setPhase('idle');
+    clearFx();
     state.elapsed = 0;
     state.zone = -1;
     resetGerms();
     setRingProgress(0);
     setActiveZone(-1);
     setMood('idle');
+    renderStars(false);
   }
 
   function start() {
     Sound.start();
     setPhase('brushing');
+    clearFx();
     state.elapsed = 0;
     state.zone = -1;
+    state.mirrored = false;
     resetGerms();
     setMood('brushing');
     giggle();
   }
 
-  function finish() {
+  function finish(save = true) {
     state.elapsed = CONFIG.totalSeconds;
-    germs.forEach((g) => { if (!g.popped) popGerm(g); });
+    setPhase('done');
+    germs.forEach((g) => { if (!g.el.classList.contains('popped')) popGerm(g); });
     setRingProgress(CONFIG.totalSeconds);
     setActiveZone(-1);
-    setPhase('done');
     setMood('cheer');
     Sound.finish();
     state.stars += 1;
-    store.set('stars', state.stars);
-    renderStars(true);
+    if (save) store.set('stars', state.stars);
+    renderStars(false, state.stars - 1); // the counter goes up when the reward lands
+    rewardDrop();
     confetti();
   }
 
@@ -213,14 +626,15 @@
       setActiveZone(zone);
     }
 
-    germs.forEach((g) => { if (!g.popped && t >= g.popAt) popGerm(g); });
+    germs.forEach((g) => { if (!g.popped && t >= g.popAt) defeatGerm(g); });
+    if (!state.mirrored && t >= CONFIG.mirrorAtSeconds) mirrorCheck();
 
     if (state.elapsed >= CONFIG.totalSeconds) finish();
   }
 
   // ---------- Effects ----------
-  function renderStars(bump) {
-    $('star-count').textContent = state.stars;
+  function renderStars(bump, value = state.stars) {
+    $('star-count').textContent = value;
     const el = $('stars');
     if (bump) {
       el.classList.remove('bump');
@@ -231,30 +645,40 @@
 
   function confetti() {
     const host = $('confetti');
-    const colors = character.theme.ring.concat(['#ffffff']);
+    const colors = state.theme.ring.concat(['#ffffff']);
     for (let i = 0; i < 50; i++) {
       const s = document.createElement('span');
       s.style.left = `${Math.random() * 100}%`;
       s.style.background = colors[i % colors.length];
       s.style.animationDuration = `${1.8 + Math.random() * 1.6}s`;
       s.style.animationDelay = `${Math.random() * 0.8}s`;
-      s.style.transform = `rotate(${Math.random() * 360}deg)`;
       host.append(s);
     }
     setTimeout(() => { host.innerHTML = ''; }, 4500);
   }
 
   // ---------- Input ----------
+  // Start screen: tap to start, press and hold to switch theme.
+  let holdTimer = null;
   screen.addEventListener('pointerdown', () => {
     Sound.unlock();
     if (state.phase === 'idle') {
-      start();
+      holdTimer = setTimeout(() => { holdTimer = null; nextTheme(); }, CONFIG.longPressMs);
     } else if (state.phase === 'brushing') {
       giggle();
     } else if (performance.now() - state.phaseSince > CONFIG.doneTapGuardMs) {
       toIdle();
     }
   });
+  function release(isTap) {
+    if (!holdTimer) return;
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    if (isTap && state.phase === 'idle') start();
+  }
+  screen.addEventListener('pointerup', () => release(true));
+  screen.addEventListener('pointerleave', () => release(false));
+  screen.addEventListener('pointercancel', () => release(false));
 
   // ---------- Main loop ----------
   function fmt(s) {
@@ -275,6 +699,8 @@
     } else if (state.phase === 'done' && inPhase > CONFIG.celebrateSeconds) {
       toIdle();
     }
+    const calm = state.mood === 'idle' || state.mood === 'brushing'; // not mid-grin or mid-fire
+    if (!trick && ts >= nextTrickAt && canTrick() && calm) runTrick(pickTrick());
 
     $('dev-time').textContent = `${fmt(state.elapsed)} / ${fmt(CONFIG.totalSeconds)}`
       + (state.phase === 'brushing' ? ` · zone ${state.zone + 1}` : '');
@@ -283,10 +709,10 @@
 
   // ---------- Dev panel ----------
   function setupDev() {
-    const sel = $('dev-char');
-    Characters.list().forEach((c) => sel.add(new Option(c.name, c.id)));
-    sel.value = character.id;
-    sel.addEventListener('change', () => loadCharacter(sel.value));
+    const sel = $('dev-theme');
+    Themes.list().forEach((t) => sel.add(new Option(t.name, t.id)));
+    sel.value = state.theme.id;
+    sel.addEventListener('change', () => loadTheme(sel.value));
 
     $('dev-speed').addEventListener('click', (e) => {
       const b = e.target.closest('button');
@@ -295,6 +721,7 @@
       $('dev-speed').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
     });
 
+    document.querySelectorAll('[data-trick]').forEach((b) => b.addEventListener('click', () => playTrick(b.dataset.trick)));
     $('dev-sound').addEventListener('change', (e) => Sound.setEnabled(e.target.checked));
     $('dev-skip').addEventListener('click', () => {
       if (state.phase !== 'brushing') start();
@@ -308,8 +735,15 @@
     });
   }
 
-  // Jump straight to a state, e.g. index.html?preview=brushing&t=50
-  // (preview = idle | sleepy | brushing | done). Handy for design reviews.
+  function playTrick(name) {
+    if (name === 'shake') shake();
+    else if (name === 'mirror') mirrorCheck();
+    else runTrick(name);
+  }
+
+  // Jump straight to a state, e.g. index.html?theme=dragon&preview=brushing&t=50&trick=peek
+  // (preview = idle | sleepy | brushing | done; trick = peek | peekSide | slide | mine |
+  // rainbow | fly | mirror | shake). Handy for design reviews.
   function applyPreview() {
     const params = new URLSearchParams(location.search);
     const preview = params.get('preview');
@@ -318,11 +752,16 @@
     } else if (preview === 'brushing') {
       start();
       state.elapsed = Number(params.get('t')) || 0;
+      const t = Math.min(state.elapsed, CONFIG.totalSeconds);
+      germs.forEach((g) => { if (t >= g.popAt) popGerm(g); }); // skip the effects
+      state.mirrored = t >= CONFIG.mirrorAtSeconds;
       updateBrushing();
     } else if (preview === 'done') {
       start();
-      finish();
+      finish(false);
     }
+    const trickName = params.get('trick');
+    if (trickName) playTrick(trickName);
   }
 
   // Scale the simulated device to fit small windows (never above 1:1).
@@ -337,9 +776,8 @@
   }
 
   // ---------- Boot ----------
-  buildRing();
   buildGerms();
-  loadCharacter(store.get('character', 'dino'));
+  loadTheme(new URLSearchParams(location.search).get('theme') || store.get('theme', 'minecraft'));
   setupDev();
   renderStars(false);
   toIdle();

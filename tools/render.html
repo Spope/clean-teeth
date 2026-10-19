@@ -1,31 +1,37 @@
 <!doctype html>
 <!--
-  Renders a single asset on a transparent background, ?size= pixels square, centred.
+  Renders a single theme asset on a transparent background, w x h pixels, centred.
   Used by tools/export_assets.sh with headless Chrome:
-    render.html?what=pose&char=dino&pose=idle
-    render.html?what=germ&i=0
-    render.html?what=star
+    render.html?theme=minecraft&what=pose&pose=idle&w=250&h=250
+    render.html?theme=minecraft&what=germ&i=0[&scared=1]
+    render.html?theme=minecraft&what=sprite&name=block
+    render.html?theme=minecraft&what=reward
+    render.html?theme=minecraft&what=bravo
+    render.html?theme=minecraft&what=digit&d=7
 -->
 <html>
 <head>
   <meta charset="utf-8">
   <title>Asset render</title>
   <style>
-    html, body { margin: 0; background: transparent; overflow: hidden; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
-    /* Asset is drawn at ?size= px in the centre of a larger window, then cropped by the script. */
+    html, body { margin: 0; background: transparent; overflow: hidden; font-family: ui-rounded, system-ui, sans-serif; }
+    /* Asset is drawn at w x h in the centre of a larger window, then cropped by the script. */
     body { display: grid; place-items: center; width: 100vw; height: 100vh; }
-    #out, #out svg { display: block; width: var(--size); height: var(--size); overflow: visible; }
+    #out { display: grid; place-items: center; width: var(--w); height: var(--h); white-space: nowrap; }
+    #out svg { display: block; width: var(--w); height: var(--h); overflow: visible; }
+    .style-blocky svg { shape-rendering: crispEdges; }
     *, *::before, *::after { animation: none !important; transition: none !important; }
   </style>
-  <script src="../prototype/characters/registry.js"></script>
-  <script src="../prototype/js/germs.js"></script>
+  <script src="../prototype/js/pixel.js"></script>
+  <script src="../prototype/themes/registry.js"></script>
 </head>
 <body>
   <div id="out"></div>
   <script>
     const q = new URLSearchParams(location.search);
     const out = document.getElementById('out');
-    out.style.setProperty('--size', `${Number(q.get('size')) || 100}px`);
+    out.style.setProperty('--w', `${Number(q.get('w')) || 100}px`);
+    out.style.setProperty('--h', `${Number(q.get('h')) || 100}px`);
 
     function addCss(text) {
       const s = document.createElement('style');
@@ -33,27 +39,39 @@
       document.head.append(s);
     }
 
-    const what = q.get('what');
-    if (what === 'pose') {
-      const id = q.get('char');
-      const script = document.createElement('script');
-      script.src = `../prototype/characters/${id}.js`;
-      script.onload = () => {
-        const c = Characters.get(id);
-        const pose = c.poses[q.get('pose')];
-        addCss(c.css);
+    const id = q.get('theme');
+    const script = document.createElement('script');
+    script.src = `../prototype/themes/${id}.js`;
+    script.onload = () => {
+      const t = Themes.get(id);
+      addCss(t.css);
+      if (t.fontUrl) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = t.fontUrl;
+        document.head.append(link);
+      }
+      out.className = `theme-${t.id} style-${t.style}`;
+
+      const what = q.get('what');
+      if (what === 'pose') {
+        const pose = t.poses[q.get('pose')];
         if (pose.css) addCss(pose.css);
-        out.className = `char-${c.id} mood-${pose.mood}`;
-        out.innerHTML = c.svg;
-      };
-      document.head.append(script);
-    } else if (what === 'germ') {
-      const color = Germs.colors[Number(q.get('i')) % Germs.colors.length];
-      out.innerHTML = `<svg viewBox="-26 -26 52 52">${Germs.svg(color)}</svg>`;
-    } else if (what === 'star') {
-      out.innerHTML = `<svg viewBox="0 0 24 24"><path fill="#ffd166" stroke="#ffd166" stroke-width="1.5"
-        stroke-linejoin="round" d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>`;
-    }
+        out.innerHTML = `<div class="character mood-${pose.mood} ${pose.cls || ''}">${t.character}</div>`;
+      } else if (what === 'germ') {
+        const set = q.get('scared') ? t.germsScared : t.germs;
+        out.innerHTML = `<svg viewBox="-26 -26 52 52">${set[Number(q.get('i'))]}</svg>`;
+      } else if (what === 'sprite') {
+        out.innerHTML = t.sprites[q.get('name')].svg;
+      } else if (what === 'reward') {
+        out.innerHTML = t.reward;
+      } else if (what === 'bravo') {
+        out.innerHTML = `<span class="t-bravo">${t.bravo}</span>`;
+      } else if (what === 'digit') {
+        out.innerHTML = `<span class="t-counter">${Number(q.get('d'))}</span>`;
+      }
+    };
+    document.head.append(script);
   </script>
 </body>
 </html>

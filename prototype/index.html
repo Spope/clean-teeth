@@ -14,16 +14,22 @@
     <div class="device-slot" id="slot">
       <div class="device" id="device">
         <div class="screen phase-idle" id="screen">
+          <div id="stage" class="stage"><!-- everything that shakes -->
           <div class="glow"></div>
           <svg id="ring" class="layer" viewBox="0 0 466 466" aria-hidden="true"></svg>
           <svg id="germs" class="layer" viewBox="0 0 466 466" aria-hidden="true"></svg>
-          <div id="character" class="character"></div>
-          <div id="stars" class="stars"><span class="star-icon">★</span><span id="star-count">0</span></div>
+          <div id="fx-back" class="fx"></div><!-- sprites behind the buddy (mining block) -->
+          <div id="buddy" class="buddy"><!-- tricks move this; moods and giggle live inside -->
+            <div id="character" class="character"></div>
+          </div>
+          <div id="fx" class="fx"></div><!-- particles, sparkles, fireballs, reward drop -->
+          <div id="stars" class="stars"><span id="reward-icon" class="reward"></span><span id="star-count" class="t-counter">0</span></div>
           <div id="hint" class="hint" aria-label="Tap to start">
             <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>
           </div>
-          <div id="bravo" class="bravo">Bravo!</div>
+          <div id="bravo" class="bravo"><span id="bravo-text" class="t-bravo"></span></div>
           <div id="confetti" class="confetti"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -44,9 +50,20 @@
         </div>
       </div>
       <div class="dev-row">
-        <span class="dev-label">Buddy</span>
-        <select id="dev-char"></select>
+        <span class="dev-label">Theme</span>
+        <select id="dev-theme"></select>
         <label class="dev-check"><input type="checkbox" id="dev-sound" checked> Sound</label>
+      </div>
+      <div class="dev-row">
+        <span class="dev-label">Tricks</span>
+        <button data-trick="peek">Peek-a-boo</button>
+        <button data-trick="peekSide">Peek side</button>
+        <button data-trick="slide">Slide</button>
+        <button data-trick="mine">Mine</button>
+        <button data-trick="rainbow">Rainbow</button>
+        <button data-trick="fly">Fly</button>
+        <button data-trick="mirror">Mirror</button>
+        <button data-trick="shake">Shake</button>
       </div>
       <div class="dev-row">
         <button id="dev-skip">Skip to end</button>
@@ -57,9 +74,10 @@
   </main>
 
   <script src="js/sound.js"></script>
-  <script src="js/germs.js"></script>
-  <script src="characters/registry.js"></script>
-  <script src="characters/dino.js"></script>
+  <script src="js/pixel.js"></script>
+  <script src="themes/registry.js"></script>
+  <script src="themes/minecraft.js"></script>
+  <script src="themes/dragon.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

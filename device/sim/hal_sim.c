@@ -1,7 +1,7 @@
 /**
  * Simulator implementation of brushy_hal.h:
  *   sound   - tiny synthesizer queued to SDL audio
- *   storage - star count in ~/.brushy-buddy-sim
+ *   storage - settings in ~/.brushy-buddy-sim, one "key value" per line
  */
 #include "brushy_hal.h"
 #include "hal_sim.h"
@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SAMPLE_RATE 44100
 
@@ -52,6 +53,7 @@ void brushy_hal_play(const brushy_note_t * notes, uint32_t count)
 
     float * out = buf;
     double phase = 0;
+    float noise_lp = 0; /* low-pass state for the noise "fwoosh" */
     for(uint32_t i = 0; i < count; i++) {
         const brushy_note_t * n = &notes[i];
         uint32_t len = n->ms * SAMPLE_RATE / 1000;
@@ -61,8 +63,17 @@ void brushy_hal_play(const brushy_note_t * notes, uint32_t count)
             double dur = n->ms / 1000.0;
             double f = n->freq_end ? n->freq * pow((double)n->freq_end / n->freq, t / dur) : n->freq;
             double env = fmin(1.0, t / 0.01) * exp(-4.0 * t / dur); /* quick attack, smooth decay */
-            phase += 2 * M_PI * f / SAMPLE_RATE;
-            out[s] = (float)(gain * env) * wave_sample(n->wave, phase);
+            float v;
+            if(n->wave == BRUSHY_WAVE_NOISE) { /* noise through a sweeping low-pass filter */
+                float k = (float)fmin(1.0, 2 * M_PI * f / SAMPLE_RATE);
+                noise_lp += k * ((float)((double)rand() / RAND_MAX * 2 - 1) - noise_lp);
+                v = noise_lp * 2;
+            }
+            else {
+                phase += 2 * M_PI * f / SAMPLE_RATE;
+                v = wave_sample(n->wave, phase);
+            }
+            out[s] = (float)(gain * env) * v;
         }
         out += len;
     }
@@ -70,7 +81,14 @@ void brushy_hal_play(const brushy_note_t * notes, uint32_t count)
     free(buf);
 }
 
-static const char * stars_path(void)
+#define MAX_KEYS 8
+
+typedef struct {
+    char key[16];
+    uint32_t value;
+} setting_t;
+
+static const char * settings_path(void)
 {
     static char path[1024];
     const char * home = getenv("HOME");
@@ -78,21 +96,41 @@ static const char * stars_path(void)
     return path;
 }
 
-uint32_t brushy_hal_load_stars(void)
+static int read_settings(setting_t * out)
 {
-    unsigned stars = 0;
-    FILE * f = fopen(stars_path(), "r");
-    if(f) {
-        if(fscanf(f, "%u", &stars) != 1) stars = 0;
-        fclose(f);
-    }
-    return stars;
+    int n = 0;
+    FILE * f = fopen(settings_path(), "r");
+    if(!f) return 0;
+    unsigned v;
+    while(n < MAX_KEYS && fscanf(f, "%15s %u", out[n].key, &v) == 2) out[n++].value = v;
+    fclose(f);
+    return n;
 }
 
-void brushy_hal_save_stars(uint32_t stars)
+uint32_t brushy_hal_load(const char * key, uint32_t fallback)
 {
-    FILE * f = fopen(stars_path(), "w");
+    setting_t s[MAX_KEYS];
+    int n = read_settings(s);
+    for(int i = 0; i < n; i++) {
+        if(strcmp(s[i].key, key) == 0) return s[i].value;
+    }
+    return fallback;
+}
+
+void brushy_hal_save(const char * key, uint32_t value)
+{
+    setting_t s[MAX_KEYS];
+    int n = read_settings(s), i = 0;
+    while(i < n && strcmp(s[i].key, key) != 0) i++;
+    if(i == n) {
+        if(n == MAX_KEYS) return;
+        snprintf(s[n].key, sizeof(s[n].key), "%s", key);
+        n++;
+    }
+    s[i].value = value;
+
+    FILE * f = fopen(settings_path(), "w");
     if(!f) return;
-    fprintf(f, "%u\n", (unsigned)stars);
+    for(int k = 0; k < n; k++) fprintf(f, "%s %u\n", s[k].key, (unsigned)s[k].value);
     fclose(f);
 }

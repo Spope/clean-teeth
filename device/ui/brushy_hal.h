@@ -11,6 +11,7 @@ typedef enum {
     BRUSHY_WAVE_SINE,
     BRUSHY_WAVE_TRIANGLE,
     BRUSHY_WAVE_SQUARE,
+    BRUSHY_WAVE_NOISE, /**< filtered noise, freq -> freq_end is the filter sweep */
 } brushy_wave_t;
 
 typedef struct {
@@ -24,6 +25,6 @@ typedef struct {
 /** Play a short sequence of notes without blocking. */
 void brushy_hal_play(const brushy_note_t * notes, uint32_t count);
 
-/** Persisted reward counter. */
-uint32_t brushy_hal_load_stars(void);
-void brushy_hal_save_stars(uint32_t stars);
+/** Small persistent settings ("stars", "theme"); keys are at most 15 characters. */
+uint32_t brushy_hal_load(const char * key, uint32_t fallback);
+void brushy_hal_save(const char * key, uint32_t value);

@@ -5,6 +5,9 @@ Usage: png2lvgl.py OUT_DIR file1.png [file2.png ...]
 
 Each `name.png` becomes `OUT_DIR/img_name.c` defining `const lv_image_dsc_t img_name`,
 and `OUT_DIR/assets.h` declares them all.
+
+Text images (`*_digit_*`, `*_bravo`) are trimmed to their visible columns so that
+proportional digits sit next to each other naturally.
 """
 import struct
 import sys
@@ -63,6 +66,14 @@ def read_png_rgba(path):
     return w, h, pixels
 
 
+def trim_columns(w, h, pixels):
+    used = [x for x in range(w) if any(pixels[y * w + x][3] for y in range(h))]
+    if not used:
+        return w, h, pixels
+    x0, x1 = used[0], used[-1] + 1
+    return x1 - x0, h, [pixels[y * w + x] for y in range(h) for x in range(x0, x1)]
+
+
 def to_rgb565a8(pixels):
     color, alpha = bytearray(), bytearray()
     for r, g, b, a in pixels:
@@ -106,6 +117,9 @@ def main():
     for png in sys.argv[2:]:
         name = "img_" + Path(png).stem
         w, h, pixels = read_png_rgba(png)
+        stem = Path(png).stem
+        if "_digit_" in stem or stem.endswith("_bravo"):
+            w, h, pixels = trim_columns(w, h, pixels)
         write_c(out_dir, name, w, h, to_rgb565a8(pixels))
         names.append(name)
         print(f"{png} -> {name}.c ({w}x{h})")

@@ -1,10 +1,12 @@
 /**
  * Desktop simulator: runs the device UI in a 466x466 SDL window.
  *
- *   brushy_sim [--speed N] [--preview STATE[:SECONDS]] [--mute]
+ *   brushy_sim [--theme ID] [--speed N] [--preview STATE[:SECONDS]] [--trick NAME] [--mute]
  *              [--zoom F] [--snapshot FILE.bmp [--after MS]]
  *
+ * ID is minecraft | dragon (default: the last one used; long-press to switch).
  * STATE is idle | sleepy | brushing | done (e.g. --preview brushing:50).
+ * NAME is peek | peek_side | slide | mine | rainbow | fly | mirror | shake: play it right away.
  * --snapshot renders the screen to a BMP after MS milliseconds and exits.
  */
 #define SDL_MAIN_HANDLED
@@ -90,6 +92,8 @@ int main(int argc, char ** argv)
 {
     float speed = 1, zoom = 1, preview_seconds = 0;
     const char * preview = NULL;
+    const char * theme = NULL;
+    const char * trick = NULL;
     const char * snapshot = NULL;
     uint32_t snapshot_after = 1500;
     bool mute = false;
@@ -102,6 +106,8 @@ int main(int argc, char ** argv)
         else if(!strcmp(a, "--zoom") && next) zoom = strtof(argv[++i], NULL);
         else if(!strcmp(a, "--after") && next) snapshot_after = (uint32_t)strtoul(argv[++i], NULL, 10);
         else if(!strcmp(a, "--snapshot") && next) snapshot = argv[++i];
+        else if(!strcmp(a, "--theme") && next) theme = argv[++i];
+        else if(!strcmp(a, "--trick") && next) trick = argv[++i];
         else if(!strcmp(a, "--mute")) mute = true;
         else if(!strcmp(a, "--preview") && next) {
             snprintf(preview_buf, sizeof(preview_buf), "%s", argv[++i]);
@@ -114,7 +120,8 @@ int main(int argc, char ** argv)
         }
         else {
             fprintf(stderr,
-                    "usage: %s [--speed N] [--preview STATE[:SECONDS]] [--mute] [--zoom F]\n"
+                    "usage: %s [--theme ID] [--speed N] [--preview STATE[:SECONDS]] [--trick NAME]\n"
+                    "          [--mute] [--zoom F]\n"
                     "          [--snapshot FILE.bmp [--after MS]]\n", argv[0]);
             return 1;
         }
@@ -128,9 +135,17 @@ int main(int argc, char ** argv)
     lv_sdl_mouse_create();
     hal_sim_init(mute || snapshot);
 
-    brushy_ui_create(lv_screen_active(), &brushy_dino);
+    brushy_ui_create(lv_screen_active());
+    if(theme && !brushy_ui_set_theme(theme)) {
+        fprintf(stderr, "unknown theme '%s'\n", theme);
+        return 1;
+    }
     brushy_ui_set_speed(speed);
     if(preview) brushy_ui_preview(preview, preview_seconds);
+    if(trick && !brushy_ui_trick(trick)) {
+        fprintf(stderr, "unknown trick '%s' (or not in this theme)\n", trick);
+        return 1;
+    }
     add_round_mask();
 
     const uint32_t started = SDL_GetTicks();
