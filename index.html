@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brushy Buddy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="app">
+    <!-- Simulated device: 466x466 round AMOLED inside a bezel -->
+    <div class="device-slot" id="slot">
+      <div class="device" id="device">
+        <div class="screen phase-idle" id="screen">
+          <div class="glow"></div>
+          <svg id="ring" class="layer" viewBox="0 0 466 466" aria-hidden="true"></svg>
+          <svg id="germs" class="layer" viewBox="0 0 466 466" aria-hidden="true"></svg>
+          <div id="character" class="character"></div>
+          <div id="stars" class="stars"><span class="star-icon">★</span><span id="star-count">0</span></div>
+          <div id="hint" class="hint" aria-label="Tap to start">
+            <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+          </div>
+          <div id="bravo" class="bravo">Bravo!</div>
+          <div id="confetti" class="confetti"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Developer controls: not part of the device UI -->
+    <section class="dev" aria-label="Developer controls">
+      <div class="dev-row">
+        <span class="dev-label">Time</span>
+        <output id="dev-time">0:00 / 2:00</output>
+        <span id="dev-phase" class="dev-chip">idle</span>
+      </div>
+      <div class="dev-row">
+        <span class="dev-label">Speed</span>
+        <div class="seg" id="dev-speed">
+          <button data-speed="1" class="on">1×</button>
+          <button data-speed="10">10×</button>
+          <button data-speed="30">30×</button>
+        </div>
+      </div>
+      <div class="dev-row">
+        <span class="dev-label">Buddy</span>
+        <select id="dev-char"></select>
+        <label class="dev-check"><input type="checkbox" id="dev-sound" checked> Sound</label>
+      </div>
+      <div class="dev-row">
+        <button id="dev-skip">Skip to end</button>
+        <button id="dev-stop">Back to start</button>
+        <button id="dev-reset">Reset stars</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="characters/registry.js"></script>
+  <script src="characters/dino.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

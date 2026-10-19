@@ -1,0 +1,239 @@
+/* ---------- Page (dev environment) ---------- */
+:root {
+  --page-bg: #14141c;
+  --page-fg: #e8e8f0;
+  --page-muted: #8a8aa0;
+  --panel: #1e1e2a;
+  --panel-border: #2e2e3e;
+
+  /* Overridden per character (see characters/*.js theme) */
+  --accent: #5bd48a;
+  --glow: rgba(91, 212, 138, 0.25);
+
+  --screen-size: 466px;
+  --bezel: 27px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--page-bg);
+  color: var(--page-fg);
+  font-family: "Fredoka", ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 16px;
+}
+
+/* ---------- Device ---------- */
+.device-slot { width: 520px; height: 520px; }
+
+.device {
+  width: calc(var(--screen-size) + 2 * var(--bezel));
+  height: calc(var(--screen-size) + 2 * var(--bezel));
+  padding: var(--bezel);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #4a4a55, #1b1b20 70%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  transform-origin: top left;
+}
+
+.screen {
+  position: relative;
+  width: var(--screen-size);
+  height: var(--screen-size);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000; /* AMOLED: black = pixels off */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 52%, var(--glow), transparent 55%);
+  transition: opacity 0.6s;
+}
+.phase-idle .glow { opacity: 0.6; }
+
+/* ---------- Progress ring ---------- */
+.seg-track, .seg-fill {
+  fill: none;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+.seg-track { stroke: rgba(255, 255, 255, 0.1); }
+.seg-track.active { animation: seg-pulse 0.9s ease-in-out infinite alternate; }
+.seg-fill { transition: opacity 0.2s; }
+
+@keyframes seg-pulse {
+  from { stroke: rgba(255, 255, 255, 0.1); }
+  to   { stroke: rgba(255, 255, 255, 0.35); }
+}
+
+/* ---------- Character host ---------- */
+.character {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  left: calc(50% - 125px);
+  top: calc(50% - 125px);
+}
+.character svg { width: 100%; height: 100%; overflow: visible; }
+
+/* Generic giggle (on tap), works for any character */
+.character.giggle { animation: giggle 0.5s ease-out; }
+@keyframes giggle {
+  0%   { transform: scale(1, 1); }
+  25%  { transform: scale(1.12, 0.88); }
+  50%  { transform: scale(0.92, 1.1) rotate(-4deg); }
+  75%  { transform: scale(1.04, 0.97) rotate(3deg); }
+  100% { transform: scale(1, 1); }
+}
+
+/* ---------- Germs ---------- */
+.germ-inner {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: germ-wobble 1.4s ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+.germ.popped .germ-inner { animation: germ-pop 0.45s ease-in forwards; }
+.phase-idle .germ-inner { animation-duration: 2.4s; }
+
+@keyframes germ-wobble {
+  from { transform: rotate(-10deg) scale(1); }
+  to   { transform: rotate(10deg) scale(1.08); }
+}
+@keyframes germ-pop {
+  0%   { transform: scale(1); opacity: 1; }
+  40%  { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+/* ---------- Overlays ---------- */
+.stars {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffd166;
+  transition: opacity 0.3s;
+}
+.stars.bump { animation: bump 0.6s ease-out; }
+.phase-brushing .stars { opacity: 0; }
+@keyframes bump {
+  0%   { transform: translateX(-50%) scale(1); }
+  40%  { transform: translateX(-50%) scale(1.6); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+.hint {
+  position: absolute;
+  bottom: 36px;
+  left: calc(50% - 28px);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  animation: hint-pulse 1.4s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.hint svg { width: 30px; height: 30px; fill: #000; margin-left: 3px; }
+.phase-idle .hint { opacity: 1; }
+@keyframes hint-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--glow); }
+  50%      { transform: scale(1.1); box-shadow: 0 0 0 14px transparent; }
+}
+
+.bravo {
+  position: absolute;
+  bottom: 52px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+}
+.phase-done .bravo { animation: bravo-in 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) forwards; }
+@keyframes bravo-in { to { opacity: 1; transform: scale(1); } }
+
+.confetti { position: absolute; inset: 0; pointer-events: none; }
+.confetti span {
+  position: absolute;
+  top: -20px;
+  width: 9px;
+  height: 14px;
+  border-radius: 3px;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(520px) rotate(720deg); }
+}
+
+/* ---------- Dev panel ---------- */
+.dev {
+  width: min(520px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+.dev-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dev-label { color: var(--page-muted); width: 64px; }
+.dev output { font-variant-numeric: tabular-nums; }
+.dev-chip {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--panel-border);
+  color: var(--page-muted);
+}
+.dev button, .dev select {
+  font: inherit;
+  color: var(--page-fg);
+  background: #2a2a3a;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.dev button:hover { background: #34344a; }
+.seg { display: flex; gap: 4px; }
+.seg button.on { background: var(--accent); color: #000; border-color: transparent; }
+.dev-check { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .germ-inner, .hint, .seg-track.active { animation: none; }
+}

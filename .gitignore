@@ -1,0 +1,7 @@
+.DS_Store
+
+# Phase 2 (ESP-IDF / PlatformIO / CMake) build outputs
+build/
+.pio/
+sdkconfig.old
+managed_components/
