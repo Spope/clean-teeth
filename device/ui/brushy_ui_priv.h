@@ -52,6 +52,8 @@ typedef struct {
     lv_obj_t * stage; /* holds everything, so the whole picture can shake */
     lv_obj_t * character;
     lv_obj_t * arcs[ZONES];
+    lv_obj_t * clock;     /* big faint countdown above the buddy */
+    int32_t clock_secs;   /* seconds shown, -1 = none */
     germ_t germs[GERM_COUNT];
     lv_obj_t * stars_row;
     lv_obj_t * digits;

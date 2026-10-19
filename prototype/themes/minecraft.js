@@ -182,6 +182,7 @@
 
     css: `
 ${T} .t-counter { font-family: 'Press Start 2P', monospace; font-size: 20px; color: #fff; text-shadow: 2px 2px 0 #3f3f3f; }
+${T} .t-clock   { font-family: 'Press Start 2P', monospace; font-size: 56px; }
 ${T} .t-bravo   { font-family: 'Press Start 2P', monospace; font-size: 26px; color: #ffff55; text-shadow: 3px 3px 0 #3f3f15; }
 
 ${T} .character svg { shape-rendering: crispEdges; }

@@ -205,6 +205,7 @@
 
     css: `
 ${T} .t-counter { font-family: 'Metamorphous', serif; font-size: 26px; color: #ffd166; text-shadow: 0 2px 0 #7a3b00; }
+${T} .t-clock { font-family: 'Metamorphous', serif; font-size: 84px; }
 ${T} .t-bravo {
   font-family: 'Cinzel Decorative', serif; font-weight: 700; font-size: 40px;
   background: linear-gradient(#fff1a8, #ffc23d 45%, #ff7b1c);

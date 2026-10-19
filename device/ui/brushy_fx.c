@@ -265,8 +265,7 @@ static void fireball_done_cb(lv_anim_t * a)
 
 static void breathe_fire(germ_t * g)
 {
-    tricks_stop();
-    if(ui.pose_override == BRUSHY_POSE_COUNT) ui_override_pose(BRUSHY_POSE_FIRE, FIREBALL_MS + 100);
+    ui_override_pose(BRUSHY_POSE_FIRE, FIREBALL_MS + 100);
     if(fireball_img) lv_obj_delete(fireball_img);
     fireball_img = ui_image(ui.stage, ui.theme->fireball);
     lv_anim_t a;
@@ -280,11 +279,17 @@ static void breathe_fire(germ_t * g)
     lv_anim_start(&a);
 }
 
+/* In the middle of a trick or the mirror check: germs just pop, the animation isn't cut. */
+static bool buddy_busy(void)
+{
+    return tricks_active() || ui.pose_override != BRUSHY_POSE_COUNT;
+}
+
 void fx_defeat_germ(germ_t * g)
 {
     g->popped = true; /* claimed: won't be triggered again */
     if(ui.theme->pop == BRUSHY_POP_CREEPER && g->kind == 0) prime(g);
-    else if(ui.theme->pop == BRUSHY_POP_FIREBALL && ui.theme->fireball) breathe_fire(g);
+    else if(ui.theme->pop == BRUSHY_POP_FIREBALL && ui.theme->fireball && !buddy_busy()) breathe_fire(g);
     else explode(g);
 }
 

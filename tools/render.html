@@ -8,6 +8,7 @@
     render.html?theme=minecraft&what=reward
     render.html?theme=minecraft&what=bravo
     render.html?theme=minecraft&what=digit&d=7
+    render.html?theme=minecraft&what=clock&d=7   (d=colon for ":")
 -->
 <html>
 <head>
@@ -69,6 +70,9 @@
         out.innerHTML = `<span class="t-bravo">${t.bravo}</span>`;
       } else if (what === 'digit') {
         out.innerHTML = `<span class="t-counter">${Number(q.get('d'))}</span>`;
+      } else if (what === 'clock') { // white: the device tints it with the zone colour
+        const d = q.get('d');
+        out.innerHTML = `<span class="t-clock" style="color:#fff">${d === 'colon' ? ':' : Number(d)}</span>`;
       }
     };
     document.head.append(script);

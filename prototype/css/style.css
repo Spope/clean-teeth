@@ -116,6 +116,23 @@ html, body {
   100% { transform: scale(1, 1); }
 }
 
+/* ---------- Countdown (big, faint, behind everything while brushing) ---------- */
+/* Sits in the free band above the buddy's head (the reward counter is hidden while brushing) */
+.clock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 88px;
+  height: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.5s, color 0.5s;
+  pointer-events: none;
+}
+.phase-brushing .clock { opacity: 0.32; }
+.t-clock { font-size: 72px; line-height: 1; white-space: nowrap; }
+
 /* ---------- Germs ---------- */
 .germ-inner {
   transform-box: fill-box;

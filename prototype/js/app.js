@@ -102,6 +102,14 @@
 
   function setActiveZone(z) {
     segments.forEach((s, i) => s.track.classList.toggle('active', i === z));
+    if (z >= 0) $('clock').style.color = state.theme.ring[z];
+  }
+
+  // Big faint countdown behind the buddy
+  function renderClock(t) {
+    const text = fmt(Math.ceil(CONFIG.totalSeconds - t));
+    const el = $('clock-text');
+    if (el.textContent !== text) el.textContent = text;
   }
 
   // ---------- Sprites and particles ----------
@@ -224,17 +232,15 @@
       g.el.classList.add('priming');
       Sound.hiss();
       later(700, () => explode(g));
-    } else if (theme.pop === 'fireball') {
-      breatheFire(g);
+    } else if (theme.pop === 'fireball' && !trick && state.mood === 'brushing') {
+      breatheFire(g); // only when the buddy isn't busy with another animation
     } else {
       explode(g);
     }
   }
 
   function breatheFire(g) {
-    stopTrick();
-    const calm = state.mood === 'brushing';
-    if (calm) setMood('fire');
+    setMood('fire');
     const [mx, my] = state.theme.mouth;
     const fb = themeSprite('fireball');
     fb.animate([
@@ -596,6 +602,7 @@
     state.zone = -1;
     state.mirrored = false;
     resetGerms();
+    renderClock(0);
     setMood('brushing');
     giggle();
   }
@@ -618,6 +625,7 @@
   function updateBrushing() {
     const t = Math.min(state.elapsed, CONFIG.totalSeconds);
     setRingProgress(t);
+    renderClock(t);
 
     const zone = Math.min(CONFIG.zones - 1, Math.floor(t / (CONFIG.totalSeconds / CONFIG.zones)));
     if (zone !== state.zone) {

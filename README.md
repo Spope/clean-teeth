@@ -32,6 +32,8 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 
 - **Tap** the screen to start; **press and hold** (about 1 s) to switch theme. Brushing lasts 2 minutes, split into 4 zones of 30 s,
   shown clockwise on the ring: top-left → top-right → bottom-right → bottom-left.
+- A big, faint **countdown** (in the theme's font and the current zone's colour) sits
+  behind everything above the buddy's head while brushing.
 - Germs around the buddy pop as time passes; a chime plays at each zone change.
 - Tapping during brushing makes the buddy giggle.
 - At the end: confetti, "Bravo !", and +1 reward (stored in the browser).
@@ -143,6 +145,7 @@ Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
 - **Ring:** 4 `lv_arc` segments (plus black notches in blocky style). **Germs:** images
   that wobble and pop.
 - **Lettering:** "Bravo !" and the digits 0-9 are images rendered in each theme's font.
+  The big countdown digits are alpha-only (A8) images, tinted with the zone colour.
 - **Sounds:** note sequences in `brushy_ui.c` played in the theme's voice, synthesized by
   the platform layer.
 - **Themes:** `device/ui/themes/<id>.c` (colours, sound flavour; images are wired up by

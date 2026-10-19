@@ -24,6 +24,9 @@
 #define BLOCKS_PER_ZONE 8   /* blocky style */
 #define CONFETTI        50
 
+#define CLOCK_Y       88 /* centre of the countdown: the free band above the buddy's head */
+#define CLOCK_OPA     82 /* about 32 % */
+
 #define LOOP_MS       33
 #define BRUSH_SWAP_MS 280
 #define FLAP_MS       150
@@ -212,6 +215,38 @@ static void set_ring_progress(float t_ms)
     }
 }
 
+/* ---------- Countdown ---------- */
+
+static lv_obj_t * row(lv_obj_t * parent, int32_t gap);
+
+static void build_clock(void)
+{
+    ui.clock = row(ui.stage, 0);
+    lv_obj_align(ui.clock, LV_ALIGN_TOP_MID, 0, CLOCK_Y - ui.theme->clock_digits[0]->header.h / 2);
+    ui.clock_secs = -1;
+}
+
+static void clock_color(lv_color_t color)
+{
+    uint32_t n = lv_obj_get_child_count(ui.clock);
+    for(uint32_t i = 0; i < n; i++) lv_obj_set_style_image_recolor(lv_obj_get_child(ui.clock, (int32_t)i), color, 0);
+}
+
+static void render_clock(float t_ms)
+{
+    int32_t secs = (int32_t)ceilf((TOTAL_MS - t_ms) / 1000.0f);
+    if(secs == ui.clock_secs) return;
+    ui.clock_secs = secs;
+
+    const uint8_t glyphs[4] = {(uint8_t)(secs / 60), 10 /* ":" */, (uint8_t)(secs % 60 / 10), (uint8_t)(secs % 10)};
+    lv_obj_clean(ui.clock);
+    for(int i = 0; i < 4; i++) {
+        lv_obj_t * img = ui_image(ui.clock, ui.theme->clock_digits[glyphs[i]]);
+        lv_obj_set_style_image_opa(img, CLOCK_OPA, 0);
+    }
+    clock_color(lv_color_hex(ui.theme->ring[ui.zone < 0 ? 0 : ui.zone]));
+}
+
 static void set_active_zone(int zone)
 {
     for(int z = 0; z < ZONES; z++) {
@@ -219,6 +254,7 @@ static void set_active_zone(int zone)
         lv_obj_set_style_arc_opa(ui.arcs[z], 25, LV_PART_MAIN);
         if(z == zone) ui_anim_loop(ui.arcs[z], exec_arc_opa, 25, 90, 900, 0);
     }
+    if(zone >= 0) clock_color(lv_color_hex(ui.theme->ring[zone]));
 }
 
 /* ---------- Buddy ---------- */
@@ -432,6 +468,7 @@ static void set_phase(phase_t phase)
     ui.phase = phase;
     ui.phase_since = lv_tick_get();
     show(ui.stars_row, phase != PHASE_BRUSHING);
+    show(ui.clock, phase == PHASE_BRUSHING);
     show(ui.hint, phase == PHASE_IDLE);
     show(ui.bravo, phase == PHASE_DONE);
 }
@@ -458,6 +495,7 @@ static void start(void)
     ui.zone = -1;
     ui.mirrored = false;
     fx_reset_germs();
+    render_clock(0);
     ui_set_mood(MOOD_BRUSHING);
     ui_giggle();
 }
@@ -483,6 +521,7 @@ static void update_brushing(void)
 {
     float t = ui.elapsed_ms < TOTAL_MS ? ui.elapsed_ms : TOTAL_MS;
     set_ring_progress(t);
+    render_clock(t);
 
     int zone = (int)(t / (TOTAL_MS / ZONES));
     if(zone > ZONES - 1) zone = ZONES - 1;
@@ -518,6 +557,7 @@ static void load_theme(const brushy_theme_t * theme)
     ui.pose = BRUSHY_POSE_COUNT; /* force the next set_pose */
 
     build_ring();
+    build_clock(); /* behind the germs and the buddy */
     fx_build_germs();
     ui.character = ui_image(ui.stage, theme->poses[BRUSHY_POSE_IDLE]);
     lv_obj_set_size(ui.character, CHAR_SIZE, CHAR_SIZE);

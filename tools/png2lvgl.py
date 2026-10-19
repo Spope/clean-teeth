@@ -7,7 +7,8 @@ Each `name.png` becomes `OUT_DIR/img_name.c` defining `const lv_image_dsc_t img_
 and `OUT_DIR/assets.h` declares them all.
 
 Text images (`*_digit_*`, `*_bravo`) are trimmed to their visible columns so that
-proportional digits sit next to each other naturally.
+proportional digits sit next to each other naturally. Countdown digits (`*_clock_*`) are
+stored as A8 (alpha only): the device tints them with the current zone's colour.
 """
 import struct
 import sys
@@ -83,7 +84,11 @@ def to_rgb565a8(pixels):
     return bytes(color + alpha)
 
 
-def write_c(out_dir, name, w, h, blob):
+def to_a8(pixels):
+    return bytes(a for _, _, _, a in pixels)
+
+
+def write_c(out_dir, name, w, h, blob, cf="RGB565A8", stride=None):
     lines = []
     for i in range(0, len(blob), 24):
         lines.append("    " + ", ".join(f"0x{b:02x}" for b in blob[i:i + 24]) + ",")
@@ -97,11 +102,11 @@ LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST static const uint8_t {name}_map[
 
 const lv_image_dsc_t {name} = {{
     .header.magic = LV_IMAGE_HEADER_MAGIC,
-    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.cf = LV_COLOR_FORMAT_{cf},
     .header.flags = 0,
     .header.w = {w},
     .header.h = {h},
-    .header.stride = {w * 2},
+    .header.stride = {stride if stride is not None else w * 2},
     .data_size = sizeof({name}_map),
     .data = {name}_map,
 }};
@@ -120,7 +125,10 @@ def main():
         stem = Path(png).stem
         if "_digit_" in stem or stem.endswith("_bravo"):
             w, h, pixels = trim_columns(w, h, pixels)
-        write_c(out_dir, name, w, h, to_rgb565a8(pixels))
+        if "_clock_" in stem:
+            write_c(out_dir, name, w, h, to_a8(pixels), cf="A8", stride=w)
+        else:
+            write_c(out_dir, name, w, h, to_rgb565a8(pixels))
         names.append(name)
         print(f"{png} -> {name}.c ({w}x{h})")
 
