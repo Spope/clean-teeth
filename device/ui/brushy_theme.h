@@ -17,8 +17,10 @@ typedef enum {
     BRUSHY_POSE_CHEER,
     BRUSHY_POSE_GRIN,      /* mirror check */
     /* only for themes with the matching trick or pop style */
-    BRUSHY_POSE_MINE_A,    /* pickaxe raised */
+    BRUSHY_POSE_MINE_A,    /* pickaxe raised (left hand) */
     BRUSHY_POSE_MINE_B,    /* pickaxe hits */
+    BRUSHY_POSE_MINE_BRUSH_A, /* same, while brushing with the right hand */
+    BRUSHY_POSE_MINE_BRUSH_B,
     BRUSHY_POSE_FIRE,      /* breathing a fireball */
     BRUSHY_POSE_FLY_A,     /* wings up */
     BRUSHY_POSE_FLY_B,     /* wings down */
@@ -38,7 +40,7 @@ typedef enum {
     BRUSHY_POP_FIREBALL, /**< the buddy breathes a fireball at each germ */
 } brushy_pop_t;
 
-/** Theme-only tricks (start screen only) */
+/** Theme-only tricks (start screen only, except mining which also plays while brushing) */
 #define BRUSHY_TRICK_MINE    (1u << 0)
 #define BRUSHY_TRICK_RAINBOW (1u << 1)
 #define BRUSHY_TRICK_FLY     (1u << 2)

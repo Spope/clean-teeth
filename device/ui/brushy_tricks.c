@@ -4,11 +4,11 @@
  *   peek       duck out, pop up big and close from the bottom edge, duck, come back
  *   peek_side  slip off one side, lean in from that edge to spy (twice), walk back
  *   slide      walk off one side, hop across the whole screen, walk back in
- *   mine       Minecraft: hit a grass block three times until it breaks
+ *   mine       Minecraft: hit a grass block three times with the left hand until it breaks
  *   rainbow    dragon: scales cycle through the rainbow while hopping
  *   fly        dragon: take off, fly across the top of the screen, glide back
- * Generic tricks play on the start screen and during brushing; theme tricks only on the
- * start screen (they put the toothbrush away).
+ * Generic tricks and mining play on the start screen and during brushing; rainbow and fly
+ * only on the start screen (they put the toothbrush away).
  */
 #include "brushy_ui_priv.h"
 
@@ -149,7 +149,7 @@ static void exec_scale(void * obj, int32_t v) { lv_image_set_scale(obj, (uint32_
 
 static void handle_event(uint8_t code)
 {
-    int32_t bx = BUDDY_X + 224, by = BUDDY_Y + 226; /* block centre, by Steve's right foot */
+    int32_t bx = BUDDY_X + 26, by = BUDDY_Y + 226; /* block centre, by Steve's left foot */
     switch(code) {
         case EV_BLOCK: {
             tr.block = ui_image(ui.stage, ui.theme->block);
@@ -191,7 +191,9 @@ static void trick_pose(int32_t t)
         for(unsigned i = 0; i < sizeof(MINE_HITS) / sizeof(MINE_HITS[0]); i++) {
             if(t >= MINE_HITS[i] && t < MINE_HITS[i] + HIT_MS) hit = true;
         }
-        ui_override_pose(hit ? BRUSHY_POSE_MINE_B : BRUSHY_POSE_MINE_A, 0);
+        bool brushing = ui.mood == MOOD_BRUSHING && ui.theme->poses[BRUSHY_POSE_MINE_BRUSH_A];
+        if(brushing) ui_override_pose(hit ? BRUSHY_POSE_MINE_BRUSH_B : BRUSHY_POSE_MINE_BRUSH_A, 0);
+        else ui_override_pose(hit ? BRUSHY_POSE_MINE_B : BRUSHY_POSE_MINE_A, 0);
     }
     else if(tr.kind == TRICK_RAINBOW) {
         if(t < RAINBOW_STEP_MS * 10) ui_override_pose((brushy_pose_t)(BRUSHY_POSE_RAINBOW_1 + (t / RAINBOW_STEP_MS) % 5), 0);
@@ -255,6 +257,7 @@ bool tricks_start(trick_t kind)
     }
 
     lv_anim_delete(ui.character, NULL); /* the trick owns the buddy's movement meanwhile */
+    lv_anim_delete(&ui.giggle_token, NULL);
     lv_obj_set_style_translate_y(ui.character, 0, 0);
     ui_clear_pose_override();
     ui.flying = kind == TRICK_FLY;
@@ -302,10 +305,8 @@ void tricks_update(uint32_t now)
     pool[n++] = TRICK_PEEK;
     pool[n++] = TRICK_PEEK_SIDE;
     pool[n++] = TRICK_SLIDE;
-    if(idle) { /* theme tricks put the toothbrush away */
-        for(trick_t k = TRICK_MINE; k < TRICK_COUNT; k++) {
-            if(available(k)) pool[n++] = k;
-        }
+    for(trick_t k = TRICK_MINE; k < TRICK_COUNT; k++) { /* rainbow and fly put the toothbrush away */
+        if(available(k) && (idle || k == TRICK_MINE)) pool[n++] = k;
     }
     tricks_start(pool[lv_rand(0, n - 1)]);
 }

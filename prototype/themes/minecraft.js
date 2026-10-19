@@ -23,6 +23,7 @@
   const armL = (cls) => `<g class="${cls}">${rect(53, 142, 32, 24, C.T)}${rect(53, 166, 32, 40, C.S)}${rect(53, 166, 6, 40, C.s)}</g>`;
   const armR = (cls) => `<g class="${cls}">${rect(165, 142, 32, 24, C.T)}${rect(165, 166, 32, 40, C.S)}${rect(191, 166, 6, 40, C.s)}</g>`;
   const armRotated = (deg) => `<g transform="rotate(${deg} 181 146)">${rect(165, 142, 32, 24, C.T)}${rect(165, 166, 32, 40, C.S)}</g>`;
+  const armLRotated = (deg) => `<g transform="rotate(${deg} 69 146)">${rect(53, 142, 32, 24, C.T)}${rect(53, 166, 32, 40, C.S)}</g>`;
   const happyEye = (x) => rect(x, 88, 8, 5, C.H) + rect(x + 8, 82, 16, 5, C.H) + rect(x + 24, 88, 8, 5, C.H);
   const plus = (x, y, s) => rect(x - s / 2, y - 1.5 * s, s, 3 * s, '#ffe14d') + rect(x - 1.5 * s, y - s / 2, 3 * s, s, '#ffe14d');
 
@@ -51,8 +52,9 @@
       <g transform="rotate(160 69 146)">${rect(53, 142, 32, 24, C.T)}${rect(53, 166, 32, 40, C.S)}</g>
       ${armRotated(-160)}
     </g>
-    <g class="pick-up">${armRotated(-160)}${pickaxe(201, 92, 25)}</g>
-    <g class="pick-down">${armRotated(-50)}${pickaxe(227, 185, 180)}</g>
+    <!-- mining with the left hand (the right one holds the toothbrush) -->
+    <g class="pick-up">${armLRotated(160)}${pickaxe(49, 92, -25)}</g>
+    <g class="pick-down">${armLRotated(50)}${pickaxe(23, 185, 180)}</g>
     ${face}
     ${rect(69, 98, 16, 8, C.cheek, 'cheek')}${rect(165, 98, 16, 8, C.cheek, 'cheek')}
 
@@ -162,7 +164,7 @@
     germsScared: MOBS.map((m) => mob(m.scared, m.pal)),
     germParticles: MOBS.map((m) => m.particles),
     pop: 'creeper',      // the creeper (germ 0) swells and flashes before exploding
-    tricks: ['mine'],    // theme-only tricks, start screen only
+    tricks: ['mine'],    // theme-only tricks (mining also plays while brushing)
     teeth: [125, 114],   // where the mirror-check sparkle shines, in the 250x250 buddy box
     mouth: [125, 114],
     sprites,
@@ -178,6 +180,8 @@
       grin:    { mood: 'grin' },
       mine_a:  { mood: 'idle', cls: 'trick-mine' },
       mine_b:  { mood: 'idle', cls: 'trick-mine hit' },
+      mine_brush_a: { mood: 'brushing', cls: 'trick-mine' },     // mining while brushing
+      mine_brush_b: { mood: 'brushing', cls: 'trick-mine hit' },
     },
 
     css: `
@@ -224,9 +228,10 @@ ${T} .mood-grin .eyes-open, ${T} .mood-grin .mouth { display: none; }
 ${T} .mood-grin .eyes-happy, ${T} .mood-grin .mouth-grin { display: inline; }
 
 /* Mining: pickaxe raised, swung down on .hit */
-${T} .trick-mine .arm-r, ${T} .trick-mine.hit .pick-up { display: none; }
+${T} .trick-mine .arm-l, ${T} .trick-mine.hit .pick-up { display: none; }
 ${T} .trick-mine .pick-up, ${T} .trick-mine.hit .pick-down { display: inline; }
 ${T} .trick-mine .body-all { animation: none; }
+${T} .trick-mine .brush { animation: none; transform: translateX(-8px); } /* brush rests while he mines */
 
 @keyframes mc-bob    { 0%, 49.9% { transform: translateY(0); } 50%, 100% { transform: translateY(-4px); } }
 @keyframes mc-jump   { 0%, 49.9% { transform: translateY(0); } 50%, 100% { transform: translateY(-16px); } }

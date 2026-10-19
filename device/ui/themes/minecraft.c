@@ -24,6 +24,8 @@ const brushy_theme_t brushy_theme_minecraft = {
     BRUSHY_THEME_IMAGES(minecraft),
     .poses[BRUSHY_POSE_MINE_A] = &img_minecraft_mine_a,
     .poses[BRUSHY_POSE_MINE_B] = &img_minecraft_mine_b,
+    .poses[BRUSHY_POSE_MINE_BRUSH_A] = &img_minecraft_mine_brush_a,
+    .poses[BRUSHY_POSE_MINE_BRUSH_B] = &img_minecraft_mine_brush_b,
     .block = &img_minecraft_block,
     .block_cracked = &img_minecraft_block_cracked,
 };

@@ -312,7 +312,8 @@
       return { frames };
     },
 
-    // Minecraft: a grass block appears, Steve hits it three times and breaks it.
+    // Minecraft: a grass block appears by Steve's left foot, he hits it three times with the
+    // pickaxe in his left hand (the right one may be brushing) and breaks it.
     mine: () => ({
       cls: 'trick-mine',
       frames: [[0, 0, 0, 1, 0, 'linear'], [3000, 0, 0, 1, 0]],
@@ -343,6 +344,7 @@
     },
   };
   const GENERIC_TRICKS = ['peek', 'peekSide', 'slide'];
+  const BRUSHING_TRICKS = ['mine']; // theme tricks that keep the toothbrush in hand
 
   let trick = null; // { anim, cls, timers, block }
   let nextTrickAt = 0;
@@ -358,7 +360,9 @@
 
   function pickTrick() {
     const list = [...GENERIC_TRICKS];
-    if (state.phase === 'idle') list.push(...(state.theme.tricks || [])); // theme tricks drop the brush
+    for (const t of state.theme.tricks || []) {
+      if (state.phase === 'idle' || BRUSHING_TRICKS.includes(t)) list.push(t); // others drop the brush
+    }
     return list[Math.floor(Math.random() * list.length)];
   }
 
@@ -366,7 +370,7 @@
   function trickEvent(t, name) {
     if (name === 'block') {
       t.block = themeSprite('block', 'fx-back');
-      const [x, y] = [BUDDY + 224, BUDDY + 226];
+      const [x, y] = [BUDDY + 26, BUDDY + 226];
       t.block.animate([{ transform: at(t.block, x, y, 0) }, { transform: at(t.block, x, y, 1) }],
         { duration: 200, easing: 'steps(3)', fill: 'forwards' });
       t.blockAt = [x, y];
