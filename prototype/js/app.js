@@ -9,7 +9,7 @@
     doneTapGuardMs: 1500,  // ignore taps right after finishing
     celebrateSeconds: 12,  // done → idle automatically
     longPressMs: 900,      // hold on the start screen to switch theme
-    trickEveryMs: [8000, 14000], // random pause between tricks
+    trickEveryMs: [10000, 15000], // random pause between tricks
   };
 
   const SIZE = 466;

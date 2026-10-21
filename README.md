@@ -39,7 +39,7 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 - Tapping during brushing makes the buddy giggle.
 - At the end: confetti, "Bravo !", and +1 reward (stored in the browser).
 - After 30 s without a tap, the buddy falls asleep.
-- Every 8-14 s while awake, the buddy plays a trick:
+- Every 10-15 s while awake, the buddy plays a trick:
   - on the start screen and while brushing: **peek-a-boo** (ducks out, pops up big and close
     from the bottom edge, comes back), **peek from the side** (leans in from an edge to spy,
     twice), **slide** (walks off one side, hops across the whole screen, walks back in);

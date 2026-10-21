@@ -12,8 +12,8 @@
  */
 #include "brushy_ui_priv.h"
 
-#define TRICK_EVERY_MIN 8000
-#define TRICK_EVERY_MAX 14000
+#define TRICK_EVERY_MIN 10000
+#define TRICK_EVERY_MAX 15000
 #define MAX_FRAMES      16
 #define MAX_EVENTS      12
 #define OFF             420 /* fully outside the 466 px screen */
