@@ -8,8 +8,6 @@
 #include <math.h>
 
 #define GERM_RADIUS  168
-#define COUNTER_X    214 /* where the reward flies to: the icon in the counter */
-#define COUNTER_Y    46
 #define VENOM_MS  380
 #define PRIME_MS     700 /* creeper swelling before it explodes */
 
@@ -333,7 +331,7 @@ void fx_mirror_check(void)
     sparkle(x - 4, y - 14, 700);
 }
 
-/* ---------- Reward drop: pops out of the buddy, bounces, flies to the counter ---------- */
+/* ---------- Reward drop: pops out of the buddy, bounces, and is collected ---------- */
 
 static keyframe_t reward_path[7];
 
@@ -350,7 +348,6 @@ static void reward_landed_cb(lv_anim_t * a)
     lv_obj_delete(a->var);
     reward_img = NULL;
     if(ui.phase != PHASE_DONE) return;
-    ui_render_stars(true, ui.stars);
     MELODY(SND_COLLECT);
 }
 
@@ -363,7 +360,7 @@ void fx_reward_drop(void)
     reward_path[3] = FRAME(800, CENTER + d * 60, 305, 1.6f, 0, EASE_IN);
     reward_path[4] = FRAME(950, CENTER + d * 62, 330, 1.6f, 0, EASE_LINEAR);
     reward_path[5] = FRAME(1500, CENTER + d * 62, 330, 1.6f, 0, EASE_IN);
-    reward_path[6] = FRAME(1900, COUNTER_X, COUNTER_Y, 1, 0, EASE_LINEAR);
+    reward_path[6] = FRAME(1900, CENTER + d * 62, 330, 0, 0, EASE_LINEAR);
 
     if(reward_img) lv_obj_delete(reward_img);
     reward_img = ui_image(ui.stage, ui.theme->reward);

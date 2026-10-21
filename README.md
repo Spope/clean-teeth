@@ -37,7 +37,7 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
   behind everything above the buddy's head while brushing.
 - Germs around the buddy pop as time passes; a chime plays at each zone change.
 - Tapping during brushing makes the buddy giggle.
-- At the end: confetti, "Bravo !", and +1 reward (stored in the browser).
+- At the end: confetti, "Bravo !", and the reward drop.
 - After 30 s without a tap, the buddy falls asleep.
 - Every 10-15 s while awake, the buddy plays a trick:
   - on the start screen and while brushing: **peek-a-boo** (ducks out, pops up big and close
@@ -51,7 +51,7 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
   (RainWings don't breathe fire), and it melts.
   The screen **shakes** and the remaining germs **shiver with scared faces**.
 - At the end, the **reward drops** out of the buddy, bounces (in pixel steps for Minecraft)
-  and flies to the counter, which goes up when it lands.
+  and is collected with a little chime.
 
 The panel under the device is for development only: speed (1×/10×/30×), theme picker,
 tricks (play one now; those the theme doesn't have are greyed out), sound, skip-to-end, reset.
@@ -144,7 +144,7 @@ Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
   wings, rainbow colours). The shake moves a full-screen "stage" container holding everything.
 - **Ring:** 4 `lv_arc` segments (plus black notches in blocky style). **Germs:** images
   that wobble and pop.
-- **Lettering:** "Bravo !" and the digits 0-9 are images rendered in each theme's font.
+- **Lettering:** "Bravo !" is an image rendered in each theme's font.
   The big countdown digits are alpha-only (A8) images, tinted with the zone colour.
 - **Sounds:** note sequences in `brushy_ui.c` played in the theme's voice, synthesized by
   the platform layer.

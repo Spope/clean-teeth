@@ -54,8 +54,6 @@ typedef struct {
     lv_obj_t * clock;     /* big faint countdown above the buddy */
     int32_t clock_secs;   /* seconds shown, -1 = none */
     germ_t germs[GERM_COUNT];
-    lv_obj_t * stars_row;
-    lv_obj_t * digits;
     lv_obj_t * hint;
     lv_obj_t * bravo;
 
@@ -71,7 +69,6 @@ typedef struct {
     uint32_t phase_since;
     uint32_t mood_since;
     uint32_t last_tick;
-    uint32_t stars;
     bool quiet;       /* no sounds while jumping to a preview state */
     int giggle_token; /* address used as the giggle animation's var */
 } brushy_ui_t;
@@ -92,7 +89,6 @@ void ui_set_mood(mood_t mood);
 void ui_override_pose(brushy_pose_t pose, uint32_t ms); /* ms = 0: until cleared */
 void ui_clear_pose_override(void);
 void ui_giggle(void);
-void ui_render_stars(bool bump, uint32_t value);
 float ui_ease(uint8_t ease, float p);
 /* Interpolates frames at time t into x, y, scale, rot; steps > 0 moves in that many jumps. */
 void ui_keyframes(const keyframe_t * f, uint8_t n, int32_t t, uint8_t steps, int32_t out[4]);

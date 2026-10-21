@@ -25,6 +25,6 @@ typedef struct {
 /** Play a short sequence of notes without blocking. */
 void brushy_hal_play(const brushy_note_t * notes, uint32_t count);
 
-/** Small persistent settings ("stars", "theme"); keys are at most 15 characters. */
+/** Small persistent settings ("theme"); keys are at most 15 characters. */
 uint32_t brushy_hal_load(const char * key, uint32_t fallback);
 void brushy_hal_save(const char * key, uint32_t value);

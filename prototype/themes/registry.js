@@ -9,7 +9,7 @@
 //   bravo      end-of-brushing title
 //   sound      { voice: 'square' | 'triangle' | 'sine', pop: 'blip' | 'whoosh' }
 //   css        styles scoped to `.theme-<id>`: the buddy's moods and the
-//              `.t-counter` / `.t-bravo` text styles
+//              `.t-clock` / `.t-bravo` text styles
 //   character  inline SVG of the buddy (drawn 250x250)
 //   poses      still frames for the device: idle, blink, sleepy, brush_a, brush_b, cheer,
 //              grin, plus any the theme's tricks need; each { mood, cls?, css? }

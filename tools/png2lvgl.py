@@ -6,7 +6,7 @@ Usage: png2lvgl.py OUT_DIR file1.png [file2.png ...]
 Each `name.png` becomes `OUT_DIR/img_name.c` defining `const lv_image_dsc_t img_name`,
 and `OUT_DIR/assets.h` declares them all.
 
-Text images (`*_digit_*`, `*_bravo`) are trimmed to their visible columns so that
+Text images (`*_clock_digit_*`, `*_bravo`) are trimmed to their visible columns so that
 proportional digits sit next to each other naturally. Countdown digits (`*_clock_*`) are
 stored as A8 (alpha only): the device tints them with the current zone's colour.
 """

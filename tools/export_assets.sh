@@ -52,9 +52,6 @@ for t in "${THEMES[@]}"; do
   done
   shot 32 32 "${t}_reward" "theme=$t&what=reward"
   shot 300 64 "${t}_bravo" "theme=$t&what=bravo"
-  for d in 0 1 2 3 4 5 6 7 8 9; do
-    shot 40 40 "${t}_digit_$d" "theme=$t&what=digit&d=$d"
-  done
   for d in 0 1 2 3 4 5 6 7 8 9 colon; do # big countdown digits
     shot 100 110 "${t}_clock_digit_$d" "theme=$t&what=clock&d=$d"
   done

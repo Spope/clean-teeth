@@ -19,7 +19,6 @@
   const BLOCKS_PER_ZONE = 8; // blocky ring style
   const GERM_R = 168;
   const BUDDY = 108;         // top-left corner of the 250x250 buddy box on screen
-  const COUNTER = [214, 46]; // where rewards fly to (the icon in the counter)
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
   const $ = (id) => document.getElementById(id);
@@ -48,7 +47,6 @@
     speed: 1,
     phaseSince: performance.now(),
     lastTs: performance.now(),
-    stars: store.get('stars', 0),
   };
 
   // Timers that belong to the current phase; cleared whenever the phase changes
@@ -466,7 +464,7 @@
     later(1700, () => { if (state.phase === 'brushing' && state.mood === 'grin') setMood('brushing'); });
   }
 
-  // ---------- Reward drop: the reward pops out of the buddy and flies to the counter ----------
+  // ---------- Reward drop: the reward pops out of the buddy, bounces, and is collected ----------
   function rewardDrop() {
     const el = sprite(state.theme.reward, 32, 32);
     const d = Math.random() < 0.5 ? -1 : 1;
@@ -478,7 +476,7 @@
       [800, CENTER + d * 60, 305, 1.6, 'in'],
       [950, CENTER + d * 62, 330, 1.6, 'linear'],
       [1500, CENTER + d * 62, 330, 1.6, 'in'],
-      [1900, COUNTER[0], COUNTER[1], 1],
+      [1900, CENTER + d * 62, 330, 0],
     ];
     const total = path[path.length - 1][0];
     el.animate(path.map(([ms, x, y, sc, e]) => ({
@@ -488,7 +486,6 @@
     })), { duration: total, fill: 'forwards' }).onfinish = () => {
       el.remove();
       if (state.phase !== 'done') return;
-      renderStars(true);
       Sound.collect();
     };
   }
@@ -523,7 +520,6 @@
 
     charHost.innerHTML = theme.character;
     germs.forEach((g) => drawGerm(g));
-    $('reward-icon').innerHTML = theme.reward;
     $('bravo-text').textContent = theme.bravo;
     buildRing(theme);
     if (state.phase === 'brushing' || state.phase === 'done') {
@@ -592,7 +588,6 @@
     setRingProgress(0);
     setActiveZone(-1);
     setMood('idle');
-    renderStars(false);
   }
 
   function start() {
@@ -607,7 +602,7 @@
     giggle();
   }
 
-  function finish(save = true) {
+  function finish() {
     state.elapsed = CONFIG.totalSeconds;
     setPhase('done');
     germs.forEach((g) => { if (!g.el.classList.contains('popped')) popGerm(g); });
@@ -615,9 +610,6 @@
     setActiveZone(-1);
     setMood('cheer');
     Sound.finish();
-    state.stars += 1;
-    if (save) store.set('stars', state.stars);
-    renderStars(false, state.stars - 1); // the counter goes up when the reward lands
     rewardDrop();
     confetti();
   }
@@ -640,16 +632,6 @@
   }
 
   // ---------- Effects ----------
-  function renderStars(bump, value = state.stars) {
-    $('star-count').textContent = value;
-    const el = $('stars');
-    if (bump) {
-      el.classList.remove('bump');
-      void el.offsetWidth;
-      el.classList.add('bump');
-    }
-  }
-
   function confetti() {
     const host = $('confetti');
     const colors = state.theme.ring.concat(['#ffffff']);
@@ -735,11 +717,6 @@
       state.elapsed = CONFIG.totalSeconds - 3 / state.speed;
     });
     $('dev-stop').addEventListener('click', toIdle);
-    $('dev-reset').addEventListener('click', () => {
-      state.stars = 0;
-      store.set('stars', 0);
-      renderStars(false);
-    });
   }
 
   function playTrick(name) {
@@ -764,7 +741,7 @@
       updateBrushing();
     } else if (preview === 'done') {
       start();
-      finish(false);
+      finish();
     }
     const trickName = params.get('trick');
     if (trickName) playTrick(trickName);
@@ -785,7 +762,6 @@
   buildGerms();
   loadTheme(new URLSearchParams(location.search).get('theme') || store.get('theme', 'minecraft'));
   setupDev();
-  renderStars(false);
   toIdle();
   applyPreview();
   fit();

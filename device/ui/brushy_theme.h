@@ -64,7 +64,6 @@ typedef struct {
     const lv_image_dsc_t * germs_scared[4];
     const lv_image_dsc_t * reward;
     const lv_image_dsc_t * bravo;
-    const lv_image_dsc_t * digits[10];
     const lv_image_dsc_t * clock_digits[11]; /**< big countdown 0-9 and ":" (A8, tinted) */
     const lv_image_dsc_t * sparkle;
     const lv_image_dsc_t * block;         /**< mine trick */
@@ -86,9 +85,6 @@ typedef struct {
                      &img_##t##_germ_scared_2, &img_##t##_germ_scared_3}, \
     .reward = &img_##t##_reward, \
     .bravo = &img_##t##_bravo, \
-    .digits = {&img_##t##_digit_0, &img_##t##_digit_1, &img_##t##_digit_2, &img_##t##_digit_3, \
-               &img_##t##_digit_4, &img_##t##_digit_5, &img_##t##_digit_6, &img_##t##_digit_7, \
-               &img_##t##_digit_8, &img_##t##_digit_9}, \
     .clock_digits = {&img_##t##_clock_digit_0, &img_##t##_clock_digit_1, &img_##t##_clock_digit_2, \
                      &img_##t##_clock_digit_3, &img_##t##_clock_digit_4, &img_##t##_clock_digit_5, \
                      &img_##t##_clock_digit_6, &img_##t##_clock_digit_7, &img_##t##_clock_digit_8, \

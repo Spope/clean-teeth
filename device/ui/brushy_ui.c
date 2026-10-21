@@ -4,7 +4,7 @@
  *              press and hold to switch theme
  *   brushing - 2 minutes, 4 zones of 30 s filling the ring clockwise from top-left;
  *              germs are defeated over time (see brushy_fx.c), tap = giggle
- *   done     - cheer, confetti, "Bravo !", the reward drops into the counter;
+ *   done     - cheer, confetti, "Bravo !", the reward drops and is collected;
  *              back to idle on tap or after 12 s
  * While awake, the buddy plays a random trick every 10-15 s (see brushy_tricks.c).
  */
@@ -353,24 +353,6 @@ void ui_giggle(void)
 
 /* ---------- Overlays and confetti ---------- */
 
-void ui_render_stars(bool bump, uint32_t value)
-{
-    char buf[12];
-    lv_snprintf(buf, sizeof(buf), "%" LV_PRIu32, value);
-    lv_obj_clean(ui.digits);
-    for(const char * c = buf; *c; c++) ui_image(ui.digits, ui.theme->digits[*c - '0']);
-
-    if(!bump) return;
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, ui.stars_row);
-    lv_anim_set_exec_cb(&a, exec_scale);
-    lv_anim_set_values(&a, 256, 410);
-    lv_anim_set_duration(&a, 240);
-    lv_anim_set_reverse_duration(&a, 360);
-    lv_anim_start(&a);
-}
-
 static void confetti_done_cb(lv_anim_t * a) { lv_obj_delete(a->var); }
 
 static void confetti(void)
@@ -409,14 +391,6 @@ static lv_obj_t * row(lv_obj_t * parent, int32_t gap)
 
 static void build_overlays(void)
 {
-    /* Reward counter (top) */
-    ui.stars_row = row(ui.stage, 6);
-    lv_obj_set_style_transform_pivot_x(ui.stars_row, LV_PCT(50), 0);
-    lv_obj_set_style_transform_pivot_y(ui.stars_row, LV_PCT(50), 0);
-    lv_obj_align(ui.stars_row, LV_ALIGN_TOP_MID, 0, 26);
-    ui_image(ui.stars_row, ui.theme->reward);
-    ui.digits = row(ui.stars_row, 1);
-
     /* Play hint (bottom) */
     ui.hint = ui_plain_obj(ui.stage);
     lv_obj_set_size(ui.hint, 56, 56);
@@ -466,7 +440,6 @@ static void set_phase(phase_t phase)
     tricks_schedule();
     ui.phase = phase;
     ui.phase_since = lv_tick_get();
-    show(ui.stars_row, phase != PHASE_BRUSHING);
     show(ui.clock, phase == PHASE_BRUSHING);
     show(ui.hint, phase == PHASE_IDLE);
     show(ui.bravo, phase == PHASE_DONE);
@@ -482,7 +455,6 @@ static void to_idle(void)
     set_ring_progress(0);
     set_active_zone(-1);
     ui_set_mood(MOOD_IDLE);
-    ui_render_stars(false, ui.stars);
 }
 
 static void start(void)
@@ -507,9 +479,6 @@ static void finish(void)
     set_active_zone(-1);
     ui_set_mood(MOOD_CHEER);
     MELODY(SND_FINISH);
-    ui.stars++;
-    if(!ui.quiet) brushy_hal_save("stars", ui.stars); /* previews don't earn rewards */
-    ui_render_stars(false, ui.stars - 1); /* the counter goes up when the reward lands */
     fx_reward_drop();
     bravo_in();
     confetti();
@@ -629,7 +598,6 @@ void brushy_ui_create(lv_obj_t * screen)
     ui.screen = screen;
     ui.speed = 1;
     ui.pose_override = BRUSHY_POSE_COUNT;
-    ui.stars = brushy_hal_load("stars", 0);
 
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0); /* AMOLED: black = pixels off */
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
