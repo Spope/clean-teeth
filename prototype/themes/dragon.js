@@ -5,6 +5,8 @@
 
   const sparkle = 'M0-11Q2-2 11 0Q2 2 0 11Q-2 2-11 0Q-2-2 0-11Z';
 
+  // Drawn in the style of the graphic novels rather than as a baby dragon: horned head on a
+  // neck, narrow slit-pupil eyes under brow ridges, pointed ruff, long prehensile tail.
   const character = `
 <svg viewBox="0 0 240 240" aria-label="Glory">
   <g class="sparkles">
@@ -16,116 +18,121 @@
 
   <g class="body-all">
     <g class="wings-folded">
-      <path class="wing" d="M86 150 Q58 132 46 100 Q40 128 50 150 Q58 166 88 168 Z"/>
-      <path class="wing" d="M154 150 Q182 132 194 100 Q200 128 190 150 Q182 166 152 168 Z"/>
+      <path class="wing" d="M100 146 L66 92 Q60 124 50 150 Q60 176 84 190 L102 172 Z"/>
+      <path class="wing" d="M140 146 L174 92 Q180 124 190 150 Q180 176 156 190 L138 172 Z"/>
+      <path class="wing-bone" d="M100 146 L66 92 M140 146 L174 92"/>
     </g>
     <g class="wings-open">
-      <path class="wing" d="M92 150 L26 66 Q34 96 14 112 Q36 118 26 142 Q50 142 46 166 Q68 158 92 170 Z"/>
-      <path class="wing" d="M148 150 L214 66 Q206 96 226 112 Q204 118 214 142 Q190 142 194 166 Q172 158 148 170 Z"/>
-      <path class="wing-bone" d="M92 150 L26 66 M148 150 L214 66"/>
+      <path class="wing" d="M98 148 L26 62 Q34 94 14 110 Q36 116 26 140 Q50 140 46 164 Q68 156 96 172 Z"/>
+      <path class="wing" d="M142 148 L214 62 Q206 94 226 110 Q204 116 214 140 Q190 140 194 164 Q172 156 144 172 Z"/>
+      <path class="wing-bone" d="M98 148 L26 62 M142 148 L214 62 M74 104 L36 116 M166 104 L204 116"/>
     </g>
 
-    <path class="tail" d="M158 206 Q212 214 214 178 Q216 150 194 150 Q174 152 180 170 Q186 182 198 174"/>
+    <path class="tail" d="M146 214 Q196 226 214 198 Q230 170 210 152 Q194 140 184 154 Q178 166 192 168"/>
 
-    <ellipse class="scale" cx="120" cy="184" rx="50" ry="44"/>
-    <ellipse class="belly" cx="120" cy="194" rx="30" ry="32"/>
-    <path class="belly-lines" d="M94 180 Q120 186 146 180 M92 194 Q120 200 148 194 M96 208 Q120 214 144 208"/>
-    <ellipse class="scale-dark" cx="94"  cy="226" rx="17" ry="9"/>
-    <ellipse class="scale-dark" cx="146" cy="226" rx="17" ry="9"/>
+    <ellipse class="scale" cx="88" cy="204" rx="17" ry="22"/>
+    <ellipse class="scale" cx="152" cy="204" rx="17" ry="22"/>
+    <path class="scale" d="M102 104 L98 146 Q78 176 92 206 Q120 222 148 206 Q162 176 142 146 L138 104 Z"/>
+    <path class="belly" d="M110 108 Q120 112 130 108 L134 146 Q144 180 120 212 Q96 180 106 146 Z"/>
+    <path class="belly-lines" d="M110 120 H130 M109 132 H131 M108 144 H132 M104 158 H136 M102 172 H138 M104 186 H136 M110 200 H130"/>
+    <ellipse class="scale-dark" cx="84" cy="226" rx="17" ry="7"/>
+    <ellipse class="scale-dark" cx="156" cy="226" rx="17" ry="7"/>
     <g class="claws">
-      <circle cx="84" cy="229" r="3"/><circle cx="94" cy="231" r="3"/><circle cx="104" cy="229" r="3"/>
-      <circle cx="136" cy="229" r="3"/><circle cx="146" cy="231" r="3"/><circle cx="156" cy="229" r="3"/>
+      <path d="M70 226 l-3 7 l7 -3Z M80 228 l-1 7 l6 -4Z M90 228 l1 7 l4 -6Z"/>
+      <path d="M170 226 l3 7 l-7 -3Z M160 228 l1 7 l-6 -4Z M150 228 l-1 7 l-4 -6Z"/>
     </g>
-    <ellipse class="scale arm" cx="76" cy="186" rx="11" ry="17" transform="rotate(25 76 186)"/>
-    <ellipse class="scale arm arm-r" cx="164" cy="186" rx="11" ry="17" transform="rotate(-25 164 186)"/>
+    <path class="scale arm" d="M100 150 Q88 166 96 186 Q102 190 106 184 Q100 168 108 156 Z"/>
+    <path class="scale arm arm-r" d="M140 150 Q152 166 144 186 Q138 190 134 184 Q140 168 132 156 Z"/>
+    <path class="texture" d="M92 176 l4 -4 l4 4 M146 176 l-4 -4 l-4 4 M84 200 l4 -4 l4 4 M156 200 l-4 -4 l-4 4"/>
 
     <g class="frills">
-      <ellipse cx="56"  cy="74"  rx="26" ry="10" transform="rotate(-35 56 74)"/>
-      <ellipse cx="48"  cy="96"  rx="27" ry="10" transform="rotate(-8 48 96)"/>
-      <ellipse cx="54"  cy="118" rx="24" ry="9"  transform="rotate(22 54 118)"/>
-      <ellipse cx="184" cy="74"  rx="26" ry="10" transform="rotate(35 184 74)"/>
-      <ellipse cx="192" cy="96"  rx="27" ry="10" transform="rotate(8 192 96)"/>
-      <ellipse cx="186" cy="118" rx="24" ry="9"  transform="rotate(-22 186 118)"/>
-      <ellipse cx="104" cy="40"  rx="7"  ry="16" transform="rotate(-25 104 40)"/>
-      <ellipse cx="120" cy="34"  rx="7"  ry="18"/>
-      <ellipse cx="136" cy="40"  rx="7"  ry="16" transform="rotate(25 136 40)"/>
+      <path d="M86 60 Q62 34 38 26 Q56 50 84 74 Z"/>
+      <path d="M82 72 Q52 66 26 72 Q52 84 82 86 Z"/>
+      <path d="M84 86 Q58 98 40 118 Q66 108 90 98 Z"/>
+      <path d="M154 60 Q178 34 202 26 Q184 50 156 74 Z"/>
+      <path d="M158 72 Q188 66 214 72 Q188 84 158 86 Z"/>
+      <path d="M156 86 Q182 98 200 118 Q174 108 150 98 Z"/>
+    </g>
+    <g class="horns">
+      <path d="M96 48 Q86 24 70 12 Q90 22 106 44 Z"/>
+      <path d="M144 48 Q154 24 170 12 Q150 22 134 44 Z"/>
     </g>
 
-    <ellipse class="scale" cx="120" cy="92" rx="62" ry="54"/>
-    <ellipse class="snout" cx="120" cy="120" rx="34" ry="22"/>
-    <ellipse class="scale-dark" cx="110" cy="114" rx="3" ry="2"/>
-    <ellipse class="scale-dark" cx="130" cy="114" rx="3" ry="2"/>
+    <path class="scale" d="M80 70 Q80 38 120 36 Q160 38 160 70 Q160 90 146 102 Q138 120 120 122 Q102 120 94 102 Q80 90 80 70 Z"/>
+    <path class="snout" d="M100 96 Q120 88 140 96 Q138 116 120 120 Q102 116 100 96 Z"/>
+    <path class="texture" d="M112 46 l8 6 l8 -6 M114 56 l6 4 l6 -4"/>
+    <ellipse class="scale-dark" cx="113" cy="101" rx="2.5" ry="1.5" transform="rotate(-20 113 101)"/>
+    <ellipse class="scale-dark" cx="127" cy="101" rx="2.5" ry="1.5" transform="rotate(20 127 101)"/>
 
     <g class="eyes-open">
-      <ellipse class="eye-white" cx="94"  cy="86" rx="16" ry="18"/>
-      <ellipse class="eye-white" cx="146" cy="86" rx="16" ry="18"/>
-      <circle class="iris" cx="96"  cy="88" r="11"/>
-      <circle class="iris" cx="144" cy="88" r="11"/>
-      <ellipse class="pupil" cx="96"  cy="88" rx="3.5" ry="8"/>
-      <ellipse class="pupil" cx="144" cy="88" rx="3.5" ry="8"/>
-      <circle class="eye-white" cx="100" cy="82" r="3.5"/>
-      <circle class="eye-white" cx="148" cy="82" r="3.5"/>
+      <path class="eye-white" d="M88 76 Q98 64 114 72 Q104 84 88 76 Z"/>
+      <path class="eye-white" d="M152 76 Q142 64 126 72 Q136 84 152 76 Z"/>
+      <ellipse class="iris" cx="102" cy="73.5" rx="5.5" ry="6"/>
+      <ellipse class="iris" cx="138" cy="73.5" rx="5.5" ry="6"/>
+      <ellipse class="pupil" cx="102" cy="73.5" rx="1.6" ry="5"/>
+      <ellipse class="pupil" cx="138" cy="73.5" rx="1.6" ry="5"/>
+      <circle class="glint" cx="104" cy="71" r="1.4"/>
+      <circle class="glint" cx="140" cy="71" r="1.4"/>
     </g>
     <g class="eyes-closed line">
-      <path d="M78 90 Q94 100 110 90"/>
-      <path d="M130 90 Q146 100 162 90"/>
+      <path d="M88 76 Q100 80 114 74"/>
+      <path d="M152 76 Q140 80 126 74"/>
     </g>
     <g class="eyes-happy line">
-      <path d="M78 94 Q94 76 110 94"/>
-      <path d="M130 94 Q146 76 162 94"/>
+      <path d="M88 78 Q100 68 114 76"/>
+      <path d="M152 78 Q140 68 126 76"/>
     </g>
+    <path class="brow" d="M86 66 Q100 58 115 63 M154 66 Q140 58 125 63"/>
 
-    <ellipse class="cheek" cx="74"  cy="112" rx="10" ry="6"/>
-    <ellipse class="cheek" cx="166" cy="112" rx="10" ry="6"/>
     <g class="mouth">
-      <path class="line" d="M102 128 Q120 140 138 128"/>
-      <path class="fang" d="M108 130 l3 6 l3 -5 Z"/>
-      <path class="fang" d="M126 131 l3 5 l3 -6 Z"/>
+      <path class="line thin" d="M104 110 Q122 116 137 107"/>
+      <path class="fang" d="M107 111 l2 5 l2 -4 Z"/>
+      <path class="fang" d="M129 112 l2 4 l2 -5 Z"/>
     </g>
     <g class="mouth-grin">
-      <path class="mouth-inside" d="M98 124 Q120 150 142 124 Q120 130 98 124 Z"/>
-      <path class="fang" d="M101 126 Q120 132 139 126 L138 131 Q120 138 102 131 Z"/>
+      <path class="mouth-inside" d="M100 106 Q120 124 140 106 Q120 112 100 106 Z"/>
+      <path class="fang" d="M103 107 Q120 112 137 107 L135 111 Q120 116 105 111 Z"/>
     </g>
     <g class="mouth-spit">
-      <ellipse class="mouth-inside" cx="120" cy="132" rx="11" ry="9"/>
-      <path class="fang" d="M111 125 l2 7 l3 -6 Z"/>
-      <path class="fang" d="M124 126 l3 6 l2 -7 Z"/>
-      <circle cx="120" cy="135" r="4.5" fill="#1b1426" stroke="#5dd94a" stroke-width="1.5"/>
+      <ellipse class="mouth-inside" cx="120" cy="112" rx="9" ry="7"/>
+      <path class="fang" d="M113 106 l2 6 l2 -5 Z"/>
+      <path class="fang" d="M123 107 l2 5 l2 -6 Z"/>
+      <circle cx="120" cy="114" r="3.5" fill="#1b1426" stroke="#5dd94a" stroke-width="1.5"/>
     </g>
 
     <g class="foam">
-      <circle cx="100" cy="140" r="5"/>
-      <circle cx="92"  cy="132" r="3.5"/>
-      <circle cx="106" cy="147" r="3"/>
-      <circle cx="144" cy="141" r="4"/>
+      <circle cx="102" cy="118" r="4"/>
+      <circle cx="95"  cy="112" r="3"/>
+      <circle cx="108" cy="124" r="2.5"/>
+      <circle cx="140" cy="119" r="3.5"/>
     </g>
     <g class="brush">
-      <path class="arm-brush" d="M164 182 L184 138"/>
-      <rect class="brush-handle" x="126" y="124" width="60" height="9" rx="4.5"/>
-      <rect class="brush-head" x="110" y="120" width="22" height="14" rx="4"/>
-      <rect class="bristles" x="112" y="113" width="18" height="8" rx="2"/>
-      <circle class="scale" cx="186" cy="130" r="10"/>
+      <path class="arm-brush" d="M138 154 Q170 150 182 118"/>
+      <rect class="brush-handle" x="126" y="106" width="60" height="8" rx="4"/>
+      <rect class="brush-head" x="110" y="103" width="22" height="13" rx="4"/>
+      <rect class="bristles" x="112" y="97" width="18" height="7" rx="2"/>
+      <circle class="scale" cx="184" cy="112" r="8"/>
     </g>
   </g>
 
   <g class="zzz">
-    <text x="178" y="40" font-size="20">z</text>
-    <text x="196" y="22" font-size="26">Z</text>
+    <text x="182" y="40" font-size="20">z</text>
+    <text x="200" y="22" font-size="26">Z</text>
   </g>
 </svg>`;
 
-  // Grumpy jungle bugs from Glory's rainforest: mosquito, beetle, caterpillar, spider.
+  // Jungle bugs from Glory's rainforest: mosquito, beetle, caterpillar, spider.
   // Scared: wide eyes, no frown, "o" mouth.
   const INK = '#1e1a33';
+  // Small glowing eyes, angled and narrowed; scared: wide and round, tiny pupils.
   function face(x, y, s, scared) {
     const f = scared
-      ? `<circle cx="-5.5" cy="-3" r="5.5" fill="#fff"/><circle cx="5.5" cy="-3" r="5.5" fill="#fff"/>
-         <circle cx="-5.5" cy="-3" r="1.8" fill="${INK}"/><circle cx="5.5" cy="-3" r="1.8" fill="${INK}"/>
-         <circle cy="7" r="2.8" fill="${INK}"/>`
-      : `<circle cx="-5.5" cy="-3" r="4.5" fill="#fff"/><circle cx="5.5" cy="-3" r="4.5" fill="#fff"/>
-         <circle cx="-4.5" cy="-2" r="2.2" fill="${INK}"/><circle cx="6.5" cy="-2" r="2.2" fill="${INK}"/>
-         <path d="M-10 -10 L-2 -7 M10 -10 L2 -7" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>
-         <path d="M-5 7 Q0 4 5 7" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+      ? `<circle cx="-5" cy="-2" r="4" fill="#ffe066"/><circle cx="5" cy="-2" r="4" fill="#ffe066"/>
+         <circle cx="-5" cy="-2" r="1.2" fill="${INK}"/><circle cx="5" cy="-2" r="1.2" fill="${INK}"/>
+         <ellipse cy="6" rx="2" ry="2.5" fill="${INK}"/>`
+      : `<path d="M-10 -5 L-1 -1 Q-5 3 -9 0 Z M10 -5 L1 -1 Q5 3 9 0 Z" fill="#ffe066" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>
+         <path d="M-5.5 -2.5 V1.5 M5.5 -2.5 V1.5" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/>
+         <path d="M-4 7 l1.5 -3 l1.5 3 M1 7 l1.5 -3 l1.5 3" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>`;
     return `<g transform="translate(${x} ${y}) scale(${s})">${f}</g>`;
   }
   const leg = (d, w = 2) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/>`;
@@ -142,7 +149,7 @@
       ${leg('M-13 -4 L-20 -8 M-15 4 L-21 5 M-12 11 L-18 17 M13 -4 L20 -8 M15 4 L21 5 M12 11 L18 17', 2.5)}
       ${leg('M-4 -14 Q-6 -20 -12 -21 M4 -14 Q6 -20 12 -21')}
       <circle cy="1" r="16" fill="${c}"/>
-      <path d="M0 6 L0 17" stroke="#c23a7c" stroke-width="2" stroke-linecap="round"/>
+      <path d="M0 10 L0 17" stroke="#c23a7c" stroke-width="2" stroke-linecap="round"/>
       <circle cx="-8" cy="10" r="2.5" fill="#c23a7c"/><circle cx="8" cy="10" r="2.5" fill="#c23a7c"/>
       <ellipse cx="-9" cy="-9" rx="3" ry="2" fill="#fff" opacity=".5" transform="rotate(-40 -9 -9)"/>
       ${face(0, -1, 1, scared)}` },
@@ -213,8 +220,8 @@
     germParticles: BUGS.map((b) => [b.color, '#1b1426', '#5dd94a']), // melted by venom
     pop: 'venom',                // Glory spits venom at each bug (RainWings don't breathe fire)
     tricks: ['rainbow', 'fly'],  // theme-only tricks, start screen only
-    teeth: [125, 134],           // in the 250x250 buddy box
-    mouth: [125, 137],
+    teeth: [125, 116],           // in the 250x250 buddy box
+    mouth: [125, 118],
     sprites,
     reward,
 
@@ -249,7 +256,7 @@ ${T} .t-bravo {
 /* Scale colours by mood (RainWing!) */
 ${T} .character {
   --scale: #3fbfa0; --scale-dark: #2a9a80; --snout: #6fd6bd; --belly: #d8f5c4; --belly-line: #b5e3a0;
-  --frill: #ffcf4a; --frill-2: #ff9f43; --wing: #2f8f78; --iris: #2f9e6b; --ink: #1e1a33;
+  --frill: #ffcf4a; --frill-2: #ff9f43; --wing: #2f8f78; --iris: #f0b429; --ink: #1e1a33;
 }
 ${T} .character.mood-sleepy {
   --scale: #8a8fe0; --scale-dark: #6c70c4; --snout: #a9adf2; --belly: #e4e2ff; --belly-line: #c9c6f5;
@@ -265,20 +272,24 @@ ${T} .scale-dark { fill: var(--scale-dark); }
 ${T} .snout      { fill: var(--snout); }
 ${T} .belly      { fill: var(--belly); }
 ${T} .belly-lines { fill: none; stroke: var(--belly-line); stroke-width: 3; stroke-linecap: round; }
-${T} .tail       { fill: none; stroke: var(--scale-dark); stroke-width: 14; stroke-linecap: round; }
+${T} .tail       { fill: none; stroke: var(--scale-dark); stroke-width: 11; stroke-linecap: round; }
 ${T} .wing       { fill: var(--wing); stroke: var(--scale-dark); stroke-width: 3; stroke-linejoin: round; }
 ${T} .wing-bone  { fill: none; stroke: var(--scale-dark); stroke-width: 5; stroke-linecap: round; }
-${T} .frills ellipse { fill: var(--frill); stroke: var(--frill-2); stroke-width: 3; }
-${T} .claws      { fill: #fff6e0; }
+${T} .frills path { fill: var(--frill); stroke: var(--frill-2); stroke-width: 2.5; stroke-linejoin: round; }
+${T} .horns      { fill: #efe2c4; stroke: #b9a57c; stroke-width: 1.5; stroke-linejoin: round; }
+${T} .texture    { fill: none; stroke: var(--scale-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
+${T} .brow       { fill: none; stroke: var(--scale-dark); stroke-width: 4; stroke-linecap: round; }
+${T} .glint      { fill: #fff; }
+${T} .claws      { fill: #efe2c4; }
 ${T} .eye-white  { fill: #fff; }
 ${T} .iris       { fill: var(--iris); }
 ${T} .pupil      { fill: var(--ink); }
-${T} .line       { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+${T} .line       { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
+${T} .line.thin  { stroke-width: 2.5; }
 ${T} .fang       { fill: #fff; }
 ${T} .mouth-inside { fill: #4a1f3d; }
-${T} .cheek      { fill: #ff6f9c; opacity: .7; }
 ${T} .foam       { fill: #fff; opacity: .9; }
-${T} .arm-brush  { fill: none; stroke: var(--scale); stroke-width: 18; stroke-linecap: round; }
+${T} .arm-brush  { fill: none; stroke: var(--scale); stroke-width: 11; stroke-linecap: round; }
 ${T} .brush-handle { fill: #4fc3f7; }
 ${T} .brush-head   { fill: #fff; }
 ${T} .bristles     { fill: #c8f0ff; }
