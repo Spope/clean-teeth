@@ -21,7 +21,7 @@ typedef enum {
     BRUSHY_POSE_MINE_B,    /* pickaxe hits */
     BRUSHY_POSE_MINE_BRUSH_A, /* same, while brushing with the right hand */
     BRUSHY_POSE_MINE_BRUSH_B,
-    BRUSHY_POSE_FIRE,      /* breathing a fireball */
+    BRUSHY_POSE_SPIT,      /* spitting venom */
     BRUSHY_POSE_FLY_A,     /* wings up */
     BRUSHY_POSE_FLY_B,     /* wings down */
     BRUSHY_POSE_RAINBOW_1, /* ...to RAINBOW_5: scale colours */
@@ -37,7 +37,7 @@ typedef enum {
 typedef enum {
     BRUSHY_POP_BURST,    /**< germs burst into particles */
     BRUSHY_POP_CREEPER,  /**< like BURST, but germ 0 swells and flashes white first */
-    BRUSHY_POP_FIREBALL, /**< the buddy breathes a fireball at each germ */
+    BRUSHY_POP_VENOM,    /**< the buddy spits venom at each germ */
 } brushy_pop_t;
 
 /** Theme-only tricks (start screen only, except mining which also plays while brushing) */
@@ -56,7 +56,7 @@ typedef struct {
     brushy_pop_t pop;
     uint8_t tricks;   /**< BRUSHY_TRICK_* */
     int16_t teeth_x, teeth_y; /**< mirror-check sparkle, in the 250x250 buddy box */
-    int16_t mouth_x, mouth_y; /**< where fireballs start, same box */
+    int16_t mouth_x, mouth_y; /**< where venom starts, same box */
     uint32_t germ_particles[4][4]; /**< 0xRRGGBB burst colours per germ, 0 = unused */
 
     const lv_image_dsc_t * poses[BRUSHY_POSE_COUNT]; /**< NULL when the theme doesn't need it */
@@ -69,7 +69,7 @@ typedef struct {
     const lv_image_dsc_t * sparkle;
     const lv_image_dsc_t * block;         /**< mine trick */
     const lv_image_dsc_t * block_cracked; /**< mine trick */
-    const lv_image_dsc_t * fireball;      /**< BRUSHY_POP_FIREBALL */
+    const lv_image_dsc_t * venom;         /**< BRUSHY_POP_VENOM */
 } brushy_theme_t;
 
 /** Fills in the images every theme has, from the asset naming scheme (<id>_idle, ...). */

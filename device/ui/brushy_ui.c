@@ -312,7 +312,7 @@ void ui_clear_pose_override(void)
     ui.flying = false;
 }
 
-/* Picks the frame: an override (grin, fire, trick) or the mood's own (scrub, blink...). */
+/* Picks the frame: an override (grin, spit, trick) or the mood's own (scrub, blink...). */
 static void update_pose(uint32_t now)
 {
     if(ui.pose_override != BRUSHY_POSE_COUNT && ui.pose_override_until &&

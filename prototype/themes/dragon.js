@@ -86,9 +86,11 @@
       <path class="mouth-inside" d="M98 124 Q120 150 142 124 Q120 130 98 124 Z"/>
       <path class="fang" d="M101 126 Q120 132 139 126 L138 131 Q120 138 102 131 Z"/>
     </g>
-    <g class="mouth-fire">
+    <g class="mouth-spit">
       <ellipse class="mouth-inside" cx="120" cy="132" rx="11" ry="9"/>
-      <ellipse cx="120" cy="134" rx="6" ry="5" fill="#ff8a3d"/>
+      <path class="fang" d="M111 125 l2 7 l3 -6 Z"/>
+      <path class="fang" d="M124 126 l3 6 l2 -7 Z"/>
+      <circle cx="120" cy="135" r="4.5" fill="#1b1426" stroke="#5dd94a" stroke-width="1.5"/>
     </g>
 
     <g class="foam">
@@ -112,33 +114,64 @@
   </g>
 </svg>`;
 
-  // Grumpy germ blobs (the original germ design), in jungle colours.
+  // Grumpy jungle bugs from Glory's rainforest: mosquito, beetle, caterpillar, spider.
   // Scared: wide eyes, no frown, "o" mouth.
-  function germ(color, scared = false) {
-    let bumps = '';
-    for (let k = 0; k < 8; k++) {
-      const a = (k / 8) * Math.PI * 2;
-      bumps += `<circle cx="${(15 * Math.cos(a)).toFixed(1)}" cy="${(15 * Math.sin(a)).toFixed(1)}" r="5.5"/>`;
-    }
-    const face = scared
+  const INK = '#1e1a33';
+  function face(x, y, s, scared) {
+    const f = scared
       ? `<circle cx="-5.5" cy="-3" r="5.5" fill="#fff"/><circle cx="5.5" cy="-3" r="5.5" fill="#fff"/>
-         <circle cx="-5.5" cy="-3" r="1.8" fill="#1e1a33"/><circle cx="5.5" cy="-3" r="1.8" fill="#1e1a33"/>
-         <circle cy="7" r="2.8" fill="#1e1a33"/>`
+         <circle cx="-5.5" cy="-3" r="1.8" fill="${INK}"/><circle cx="5.5" cy="-3" r="1.8" fill="${INK}"/>
+         <circle cy="7" r="2.8" fill="${INK}"/>`
       : `<circle cx="-5.5" cy="-3" r="4.5" fill="#fff"/><circle cx="5.5" cy="-3" r="4.5" fill="#fff"/>
-         <circle cx="-4.5" cy="-2" r="2.2" fill="#1e1a33"/><circle cx="6.5" cy="-2" r="2.2" fill="#1e1a33"/>
-         <path d="M-10 -10 L-2 -7 M10 -10 L2 -7" stroke="#1e1a33" stroke-width="2" stroke-linecap="round"/>
-         <path d="M-5 7 Q0 4 5 7" fill="none" stroke="#1e1a33" stroke-width="2" stroke-linecap="round"/>`;
-    return `<g fill="${color}">${bumps}<circle r="15"/>${face}</g>`;
+         <circle cx="-4.5" cy="-2" r="2.2" fill="${INK}"/><circle cx="6.5" cy="-2" r="2.2" fill="${INK}"/>
+         <path d="M-10 -10 L-2 -7 M10 -10 L2 -7" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>
+         <path d="M-5 7 Q0 4 5 7" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
+    return `<g transform="translate(${x} ${y}) scale(${s})">${f}</g>`;
   }
-  const GERM_COLORS = ['#8a5cff', '#ff5fa2', '#9be15d', '#ff9f43'];
+  const leg = (d, w = 2) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/>`;
+
+  const BUGS = [
+    { color: '#8a5cff', draw: (c, scared) => `
+      <ellipse cx="-10" cy="-11" rx="5" ry="10" transform="rotate(-35 -10 -11)" fill="#e6f6ff" opacity=".85" stroke="${INK}" stroke-width="1.2"/>
+      <ellipse cx="10" cy="-11" rx="5" ry="10" transform="rotate(35 10 -11)" fill="#e6f6ff" opacity=".85" stroke="${INK}" stroke-width="1.2"/>
+      ${leg('M-7 4 L-15 10 L-19 19 M-9 0 L-19 2 L-21 8 M7 4 L15 10 L19 19 M9 0 L19 2 L21 8', 1.5)}
+      ${leg('M-4 -12 Q-6 -18 -11 -21 M4 -12 Q6 -18 11 -21', 1.5)}
+      ${leg('M0 9 L0 21', 2.5)}
+      <circle cy="-1" r="12" fill="${c}"/>${face(0, -1, 0.95, scared)}` },
+    { color: '#ff5fa2', draw: (c, scared) => `
+      ${leg('M-13 -4 L-20 -8 M-15 4 L-21 5 M-12 11 L-18 17 M13 -4 L20 -8 M15 4 L21 5 M12 11 L18 17', 2.5)}
+      ${leg('M-4 -14 Q-6 -20 -12 -21 M4 -14 Q6 -20 12 -21')}
+      <circle cy="1" r="16" fill="${c}"/>
+      <path d="M0 6 L0 17" stroke="#c23a7c" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="-8" cy="10" r="2.5" fill="#c23a7c"/><circle cx="8" cy="10" r="2.5" fill="#c23a7c"/>
+      <ellipse cx="-9" cy="-9" rx="3" ry="2" fill="#fff" opacity=".5" transform="rotate(-40 -9 -9)"/>
+      ${face(0, -1, 1, scared)}` },
+    { color: '#9be15d', draw: (c, scared) => `
+      <g fill="${INK}"><circle cx="-16" cy="16" r="2"/><circle cx="-9" cy="18" r="2"/><circle cx="-2" cy="18" r="2"/></g>
+      <g fill="#ff9f43"><path d="M-19 4 l2 -6 l3 5Z"/><path d="M-12 5 l2 -6 l3 5Z"/><path d="M-5 5 l2 -6 l3 5Z"/></g>
+      <circle cx="-16" cy="10" r="6" fill="${c}"/><circle cx="-9" cy="12" r="6.5" fill="${c}"/><circle cx="-2" cy="12" r="6.5" fill="${c}"/>
+      <g fill="#d8f5c4"><circle cx="-16" cy="10" r="2"/><circle cx="-9" cy="12" r="2"/><circle cx="-2" cy="12" r="2"/></g>
+      ${leg('M4 -11 Q2 -18 -2 -20 M12 -11 Q14 -18 18 -20')}
+      <circle cx="8" cy="-1" r="12" fill="${c}"/>${face(8, -1, 0.95, scared)}` },
+    { color: '#ff9f43', draw: (c, scared) => `
+      ${leg('M-8 -6 Q-16 -18 -21 -12 M-10 -1 Q-20 -6 -22 2 M-10 4 Q-19 6 -20 14 M-8 8 Q-14 16 -12 21', 2.5)}
+      ${leg('M8 -6 Q16 -18 21 -12 M10 -1 Q20 -6 22 2 M10 4 Q19 6 20 14 M8 8 Q14 16 12 21', 2.5)}
+      <circle r="14" fill="${c}"/>
+      <circle cx="-3" cy="-11" r="1.5" fill="${INK}"/><circle cx="3" cy="-11" r="1.5" fill="${INK}"/>
+      <path d="M-4 10 l1.5 4 l1.5 -4Z M1 10 l1.5 4 l1.5 -4Z" fill="#fff"/>
+      ${face(0, 0, 0.95, scared)}` },
+  ];
+  const bug = (b, scared = false) => `<g>${b.draw(b.color, scared)}</g>`;
 
   const sprites = {
     sparkle: { w: 36, h: 36, svg: `<svg viewBox="-12 -12 24 24">
       <path d="M0-11Q1.5-1.5 11 0Q1.5 1.5 0 11Q-1.5 1.5-11 0Q-1.5-1.5 0-11Z" fill="#fff6c2"/>
       <circle r="2.5" fill="#fff"/></svg>` },
-    fireball: { w: 40, h: 40, svg: `<svg viewBox="-20 -20 40 40">
-      <path d="M-16 0 Q-14 -12 -2 -15 Q-6 -8 2 -10 Q14 -12 16 0 Q14 14 0 16 Q-14 14 -16 0Z" fill="#ff5a1c"/>
-      <circle r="10" fill="#ffa23d"/><circle r="5" fill="#ffe066"/></svg>` },
+    // RainWing venom: a black glob with an acid-green glow
+    venom: { w: 40, h: 40, svg: `<svg viewBox="-20 -20 40 40">
+      <path d="M-15 0 Q-15 -11 -4 -14 Q2 -18 8 -12 Q16 -8 15 1 Q17 10 8 14 Q0 18 -7 13 Q-16 10 -15 0Z" fill="#5dd94a" opacity=".55"/>
+      <path d="M-10 0 Q-10 -9 0 -10 Q10 -10 10 0 Q11 9 1 10 Q-10 10 -10 0Z" fill="#1b1426"/>
+      <circle cx="-4" cy="-4" r="2.5" fill="#9dff8a"/></svg>` },
   };
 
   // RainWing rainbow: 5 scale palettes cycled by the "rainbow" trick
@@ -175,10 +208,10 @@
     bravo: 'Bravo !',
     sound: { voice: 'triangle', pop: 'whoosh' },
     character,
-    germs: GERM_COLORS.map((c) => germ(c)),
-    germsScared: GERM_COLORS.map((c) => germ(c, true)),
-    germParticles: GERM_COLORS.map((c) => [c, '#ff8a3d', '#ffe066']), // burnt to embers
-    pop: 'fireball',             // Glory breathes a fireball at each germ
+    germs: BUGS.map((b) => bug(b)),
+    germsScared: BUGS.map((b) => bug(b, true)),
+    germParticles: BUGS.map((b) => [b.color, '#1b1426', '#5dd94a']), // melted by venom
+    pop: 'venom',                // Glory spits venom at each bug (RainWings don't breathe fire)
     tricks: ['rainbow', 'fly'],  // theme-only tricks, start screen only
     teeth: [125, 134],           // in the 250x250 buddy box
     mouth: [125, 137],
@@ -193,7 +226,7 @@
       brush_b: { mood: 'brushing', css: `${T} .brush{transform:translateX(9px)}` },
       cheer:   { mood: 'cheer' },
       grin:    { mood: 'grin' },
-      fire:    { mood: 'fire' },
+      spit:    { mood: 'spit' },
       fly_a:   { mood: 'idle', cls: 'trick-fly' },
       fly_b:   { mood: 'idle', cls: 'trick-fly flap' },
       rainbow_1: { mood: 'idle', cls: 'rainbow-1' },
@@ -254,7 +287,7 @@ ${T} .zzz        { fill: #c3b5ff; font-family: 'Cinzel Decorative', serif; font-
 
 /* Hidden unless a mood shows them */
 ${T} .eyes-closed, ${T} .eyes-happy, ${T} .brush, ${T} .foam, ${T} .zzz,
-${T} .sparkles, ${T} .wings-open, ${T} .mouth-grin, ${T} .mouth-fire { display: none; }
+${T} .sparkles, ${T} .wings-open, ${T} .mouth-grin, ${T} .mouth-spit { display: none; }
 
 ${T} .body-all, ${T} .eyes-open, ${T} .brush, ${T} .foam, ${T} .sparkles path, ${T} .zzz text {
   transform-box: fill-box; transform-origin: center;
@@ -291,9 +324,9 @@ ${T} .mood-cheer .sparkles path:nth-child(4) { animation-delay: .15s; }
 ${T} .mood-grin .eyes-open, ${T} .mood-grin .mouth { display: none; }
 ${T} .mood-grin .eyes-happy, ${T} .mood-grin .mouth-grin { display: inline; }
 
-/* Breathing fire at a germ */
-${T} .mood-fire .mouth { display: none; }
-${T} .mood-fire .mouth-fire { display: inline; }
+/* Spitting venom at a bug */
+${T} .mood-spit .mouth { display: none; }
+${T} .mood-spit .mouth-spit { display: inline; }
 
 /* Flying: wings spread and flapping */
 ${T} .trick-fly .wings-folded { display: none; }

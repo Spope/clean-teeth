@@ -18,15 +18,15 @@
 //   germsScared  same 4 germs with scared faces (when another germ pops)
 //   germParticles  [4 colour lists] for the burst when each germ pops
 //   pop        how germs are defeated: 'creeper' (germ 0 swells and flashes, then all
-//              burst into pixels) | 'fireball' (the buddy breathes fire at them)
+//              burst into pixels) | 'venom' (the buddy spits venom at them)
 //   tricks     theme-only tricks for the start screen: 'mine' | 'rainbow' | 'fly'
-//   teeth, mouth  [x, y] in the 250x250 buddy box: mirror-check sparkle, fireball start
+//   teeth, mouth  [x, y] in the 250x250 buddy box: mirror-check sparkle, venom start
 //   sprites    { name: { w, h, svg } }: sparkle (all themes), block + block_cracked
-//              (mine), fireball (fireball pop)
+//              (mine), venom (venom pop)
 //   reward     SVG of the reward icon (drawn 32x32)
 //
 // The app puts one mood class on the buddy's host element (.character):
-//   mood-idle | mood-sleepy | mood-brushing | mood-cheer | mood-grin | mood-fire
+//   mood-idle | mood-sleepy | mood-brushing | mood-cheer | mood-grin | mood-spit
 // plus trick classes while a theme trick runs (trick-mine, hit, trick-fly, rainbow-N)
 // and briefly `giggle` when the child taps (handled generically).
 window.Themes = (function () {

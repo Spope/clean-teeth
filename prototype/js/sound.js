@@ -41,7 +41,7 @@ window.Sound = (function () {
     osc.stop(t + dur + 0.05);
   }
 
-  // Filtered noise sweep: a "fwoosh" of dragon fire, a fuse hiss, crumbling dirt...
+  // Filtered noise sweep: a "fwoosh" of dragon venom, a fuse hiss, crumbling dirt...
   function noise(dur = 0.3, gain = 0.25, from = 600, to = 2400) {
     const c = ensure();
     if (!c || !enabled) return;

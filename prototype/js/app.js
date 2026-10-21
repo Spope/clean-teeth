@@ -232,25 +232,25 @@
       g.el.classList.add('priming');
       Sound.hiss();
       later(700, () => explode(g));
-    } else if (theme.pop === 'fireball' && !trick && state.mood === 'brushing') {
-      breatheFire(g); // only when the buddy isn't busy with another animation
+    } else if (theme.pop === 'venom' && !trick && state.mood === 'brushing') {
+      spitVenom(g); // only when the buddy isn't busy with another animation
     } else {
       explode(g);
     }
   }
 
-  function breatheFire(g) {
-    setMood('fire');
+  function spitVenom(g) {
+    setMood('spit');
     const [mx, my] = state.theme.mouth;
-    const fb = themeSprite('fireball');
-    fb.animate([
-      { transform: at(fb, BUDDY + mx, BUDDY + my, 0.4) },
-      { transform: at(fb, g.x, g.y, 1.1) },
+    const glob = themeSprite('venom');
+    glob.animate([
+      { transform: at(glob, BUDDY + mx, BUDDY + my, 0.4) },
+      { transform: at(glob, g.x, g.y, 1.1) },
     ], { duration: 380, easing: 'ease-in', fill: 'forwards' }).onfinish = () => {
-      fb.remove();
+      glob.remove();
       if (state.phase !== 'brushing') return; // brushing ended meanwhile
       explode(g);
-      if (state.phase === 'brushing' && state.mood === 'fire') setMood('brushing');
+      if (state.phase === 'brushing' && state.mood === 'spit') setMood('brushing');
     };
   }
 
@@ -711,7 +711,7 @@
     } else if (state.phase === 'done' && inPhase > CONFIG.celebrateSeconds) {
       toIdle();
     }
-    const calm = state.mood === 'idle' || state.mood === 'brushing'; // not mid-grin or mid-fire
+    const calm = state.mood === 'idle' || state.mood === 'brushing'; // not mid-grin or mid-spit
     if (!trick && ts >= nextTrickAt && canTrick() && calm) runTrick(pickTrick());
 
     $('dev-time').textContent = `${fmt(state.elapsed)} / ${fmt(CONFIG.totalSeconds)}`

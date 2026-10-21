@@ -10,7 +10,7 @@
 #define GERM_RADIUS  168
 #define COUNTER_X    214 /* where the reward flies to: the icon in the counter */
 #define COUNTER_Y    46
-#define FIREBALL_MS  380
+#define VENOM_MS  380
 #define PRIME_MS     700 /* creeper swelling before it explodes */
 
 static const brushy_note_t SND_BLIP[] = {{500, 1400, 120, BRUSHY_WAVE_SINE, 80}};
@@ -22,7 +22,7 @@ static const brushy_note_t SND_BLING[] = {
 static const brushy_note_t SND_COLLECT[] = {{988, 0, 60, BRUSHY_WAVE_TRIANGLE, 50}, {1319, 0, 140, BRUSHY_WAVE_TRIANGLE, 50}};
 
 static lv_obj_t * reward_img;
-static lv_obj_t * fireball_img;
+static lv_obj_t * venom_img;
 
 static void play_pop(void)
 {
@@ -244,38 +244,38 @@ static void prime(germ_t * g)
     SOUND(SND_HISS);
 }
 
-/* Fireball from the buddy's mouth to the germ */
-static void exec_fireball(lv_anim_t * a, int32_t v)
+/* Venom glob from the buddy's mouth to the germ */
+static void exec_venom(lv_anim_t * a, int32_t v)
 {
     germ_t * g = lv_anim_get_user_data(a);
     float p = ui_ease(EASE_IN, v / 1000.0f);
     int32_t x0 = BUDDY_X + ui.theme->mouth_x, y0 = BUDDY_Y + ui.theme->mouth_y;
-    int32_t w = ui.theme->fireball->header.w, h = ui.theme->fireball->header.h;
+    int32_t w = ui.theme->venom->header.w, h = ui.theme->venom->header.h;
     lv_obj_set_pos(a->var, x0 + (int32_t)((g->cx - x0) * p) - w / 2, y0 + (int32_t)((g->cy - y0) * p) - h / 2);
     lv_image_set_scale(a->var, (uint32_t)(102 + 180 * p)); /* 0.4x -> 1.1x */
 }
 
-static void fireball_done_cb(lv_anim_t * a)
+static void venom_done_cb(lv_anim_t * a)
 {
     germ_t * g = lv_anim_get_user_data(a);
     lv_obj_delete(a->var);
-    fireball_img = NULL;
+    venom_img = NULL;
     if(ui.phase == PHASE_BRUSHING) explode(g);
 }
 
-static void breathe_fire(germ_t * g)
+static void spit_venom(germ_t * g)
 {
-    ui_override_pose(BRUSHY_POSE_FIRE, FIREBALL_MS + 100);
-    if(fireball_img) lv_obj_delete(fireball_img);
-    fireball_img = ui_image(ui.stage, ui.theme->fireball);
+    ui_override_pose(BRUSHY_POSE_SPIT, VENOM_MS + 100);
+    if(venom_img) lv_obj_delete(venom_img);
+    venom_img = ui_image(ui.stage, ui.theme->venom);
     lv_anim_t a;
     lv_anim_init(&a);
-    lv_anim_set_var(&a, fireball_img);
-    lv_anim_set_custom_exec_cb(&a, exec_fireball);
+    lv_anim_set_var(&a, venom_img);
+    lv_anim_set_custom_exec_cb(&a, exec_venom);
     lv_anim_set_values(&a, 0, 1000);
-    lv_anim_set_duration(&a, FIREBALL_MS);
+    lv_anim_set_duration(&a, VENOM_MS);
     lv_anim_set_user_data(&a, g);
-    lv_anim_set_completed_cb(&a, fireball_done_cb);
+    lv_anim_set_completed_cb(&a, venom_done_cb);
     lv_anim_start(&a);
 }
 
@@ -289,7 +289,7 @@ void fx_defeat_germ(germ_t * g)
 {
     g->popped = true; /* claimed: won't be triggered again */
     if(ui.theme->pop == BRUSHY_POP_CREEPER && g->kind == 0) prime(g);
-    else if(ui.theme->pop == BRUSHY_POP_FIREBALL && ui.theme->fireball && !buddy_busy()) breathe_fire(g);
+    else if(ui.theme->pop == BRUSHY_POP_VENOM && ui.theme->venom && !buddy_busy()) spit_venom(g);
     else explode(g);
 }
 
@@ -383,6 +383,6 @@ void fx_reward_drop(void)
 void fx_clear(void)
 {
     if(reward_img) lv_obj_delete(reward_img);
-    if(fireball_img) lv_obj_delete(fireball_img);
-    reward_img = fireball_img = NULL;
+    if(venom_img) lv_obj_delete(venom_img);
+    reward_img = venom_img = NULL;
 }

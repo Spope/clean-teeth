@@ -8,7 +8,8 @@ Two themes, switched by **pressing and holding** the start screen:
 - **Minecraft**: Steve, mob heads as germs (creeper, zombie, slime, spider),
   diamonds as rewards, a blocky XP-bar ring, chiptune sounds.
 - **Les Royaumes de feu**: Glory the RainWing, whose scales change colour with her mood
-  (teal → lavender when sleepy → pink when happy), gems as rewards, fire "fwoosh" pops.
+  (teal → lavender when sleepy → pink when happy), jungle bugs as germs (mosquito, beetle,
+  caterpillar, spider), gems as rewards, venom "fwoosh" pops.
 
 ```
 prototype/     Phase 1: browser prototype, and the source of all artwork (SVG)
@@ -46,7 +47,8 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
     block appears, Steve breaks it in three pickaxe hits); Glory's **rainbow** scales and
     **flying** across the top of the screen.
 - Germs are defeated the theme's way: Minecraft mobs burst into pixels (the creeper swells
-  and flashes white first, with a fuse hiss); Glory breathes a **fireball** at each germ.
+  and flashes white first, with a fuse hiss); Glory spits **venom** at each bug
+  (RainWings don't breathe fire), and it melts.
   The screen **shakes** and the remaining germs **shiver with scared faces**.
 - Just past halfway (1:05), the **mirror check**: the buddy shows off a big toothy grin
   with sparkles.
