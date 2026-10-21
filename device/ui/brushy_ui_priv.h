@@ -105,7 +105,7 @@ void fx_reward_drop(void);
 void fx_clear(void);
 
 /* brushy_tricks.c */
-typedef enum { TRICK_PEEK, TRICK_PEEK_SIDE, TRICK_SLIDE, TRICK_MINE, TRICK_RAINBOW, TRICK_FLY, TRICK_COUNT } trick_t;
+typedef enum { TRICK_PEEK, TRICK_PEEK_SIDE, TRICK_SLIDE, TRICK_MINE, TRICK_RAINBOW, TRICK_FLY, TRICK_XP, TRICK_COUNT } trick_t;
 void tricks_schedule(void);
 void tricks_update(uint32_t now); /* starts a random trick when it's time */
 bool tricks_start(trick_t trick); /* false if the theme doesn't have it */

@@ -40,10 +40,11 @@ typedef enum {
     BRUSHY_POP_VENOM,    /**< the buddy spits venom at each germ */
 } brushy_pop_t;
 
-/** Theme-only tricks (start screen only, except mining which also plays while brushing) */
+/** Theme-only tricks (start screen only, except mining and XP which also play while brushing) */
 #define BRUSHY_TRICK_MINE    (1u << 0)
 #define BRUSHY_TRICK_RAINBOW (1u << 1)
 #define BRUSHY_TRICK_FLY     (1u << 2)
+#define BRUSHY_TRICK_XP      (1u << 3)
 
 typedef struct {
     const char * id;
@@ -68,6 +69,7 @@ typedef struct {
     const lv_image_dsc_t * sparkle;
     const lv_image_dsc_t * block;         /**< mine trick */
     const lv_image_dsc_t * block_cracked; /**< mine trick */
+    const lv_image_dsc_t * xp_orb;        /**< xp trick */
     const lv_image_dsc_t * venom;         /**< BRUSHY_POP_VENOM */
 } brushy_theme_t;
 

@@ -14,8 +14,8 @@ void brushy_ui_create(lv_obj_t * screen);
 /** Switch theme by id (e.g. "minecraft", "dragon"). Returns false if unknown. */
 bool brushy_ui_set_theme(const char * id);
 
-/** Play an animation now: "peek" (peek-a-boo), "peek_side", "slide", "mine", "rainbow",
- *  "fly", "mirror" or "shake". Returns false if unknown or not in the current theme. */
+/** Play an animation now: "peek" (peek-a-boo), "peek_side", "slide", "mine", "xp",
+ *  "rainbow", "fly", "mirror" or "shake". Returns false if unknown or not in the current theme. */
 bool brushy_ui_trick(const char * name);
 
 /** Time multiplier for testing (1 = real time). */

@@ -6,7 +6,7 @@
  *
  * ID is minecraft | dragon (default: the last one used; long-press to switch).
  * STATE is idle | sleepy | brushing | done (e.g. --preview brushing:50).
- * NAME is peek | peek_side | slide | mine | rainbow | fly | mirror | shake: play it right away.
+ * NAME is peek | peek_side | slide | mine | xp | rainbow | fly | mirror | shake: play it right away.
  * --snapshot renders the screen to a BMP after MS milliseconds and exits.
  */
 #define SDL_MAIN_HANDLED

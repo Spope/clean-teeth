@@ -19,10 +19,10 @@
 //   germParticles  [4 colour lists] for the burst when each germ pops
 //   pop        how germs are defeated: 'creeper' (germ 0 swells and flashes, then all
 //              burst into pixels) | 'venom' (the buddy spits venom at them)
-//   tricks     theme-only tricks for the start screen: 'mine' | 'rainbow' | 'fly'
+//   tricks     theme-only tricks: 'mine' | 'xp' | 'rainbow' | 'fly'
 //   teeth, mouth  [x, y] in the 250x250 buddy box: mirror-check sparkle, venom start
 //   sprites    { name: { w, h, svg } }: sparkle (all themes), block + block_cracked
-//              (mine), venom (venom pop)
+//              (mine), xp_orb (xp), venom (venom pop)
 //   reward     SVG of the reward icon (drawn 32x32)
 //
 // The app puts one mood class on the buddy's host element (.character):

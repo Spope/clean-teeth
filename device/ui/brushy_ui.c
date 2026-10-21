@@ -635,7 +635,7 @@ bool brushy_ui_set_theme(const char * id)
 
 bool brushy_ui_trick(const char * name)
 {
-    static const char * const names[TRICK_COUNT] = {"peek", "peek_side", "slide", "mine", "rainbow", "fly"};
+    static const char * const names[TRICK_COUNT] = {"peek", "peek_side", "slide", "mine", "rainbow", "fly", "xp"};
     for(int i = 0; i < TRICK_COUNT; i++) {
         if(strcmp(name, names[i]) == 0) return tricks_start((trick_t)i);
     }

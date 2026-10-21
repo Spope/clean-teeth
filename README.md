@@ -42,9 +42,11 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 - Every 10-15 s while awake, the buddy plays a trick:
   - on the start screen and while brushing: **peek-a-boo** (ducks out, pops up big and close
     from the bottom edge, comes back), **peek from the side** (leans in from an edge to spy,
-    twice), **slide** (walks off one side, hops across the whole screen, walks back in);
-  - on the start screen only (they put the toothbrush away): Minecraft **mining** (a grass
-    block appears, Steve breaks it in three pickaxe hits); Glory's **rainbow** scales and
+    twice), **slide** (walks off one side, hops across the whole screen, walks back in),
+    and Steve's Minecraft tricks: **mining** (a grass block appears, he breaks it in three
+    pickaxe hits with his left hand) and **XP orbs** (orbs appear around the ring and zip
+    into him, each with a "ding", then he levels up);
+  - on the start screen only (they put the toothbrush away): Glory's **rainbow** scales and
     **flying** across the top of the screen.
 - Germs are defeated the theme's way: Minecraft mobs burst into pixels (the creeper swells
   and flashes white first, with a fuse hiss); Glory spits **venom** at each bug
@@ -60,7 +62,7 @@ Preview a state directly with a URL parameter:
 
 ```
 index.html?theme=dragon&preview=idle | sleepy | brushing&t=50 | done
-          &trick=peek | peekSide | slide | mine | rainbow | fly | mirror | shake
+          &trick=peek | peekSide | slide | mine | xp | rainbow | fly | mirror | shake
 ```
 
 ### Prototype layout
@@ -122,7 +124,7 @@ Options:
 --speed 10                 run time 10x faster (testing)
 --preview brushing:50      start in a state: idle | sleepy | brushing[:seconds] | done
 --trick peek               play an animation right away: peek | peek_side | slide |
-                           mine | rainbow | fly | mirror | shake
+                           mine | xp | rainbow | fly | mirror | shake
 --mute                     no sound
 --zoom 0.5                 smaller window, closer to the real 4.4 cm panel size
 --snapshot out.bmp --after 1500   save a screenshot after 1.5 s and quit

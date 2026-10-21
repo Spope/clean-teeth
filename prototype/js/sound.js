@@ -83,6 +83,8 @@ window.Sound = (function () {
     hiss()   { noise(0.7, 0.12, 3000, 5000); },                 // creeper fuse
     hit()    { tone(160, 0, 0.06, 'square', 0.25, 90); },       // pickaxe on a block
     crumble() { noise(0.25, 0.3, 400, 150); },                  // block breaks
+    xp()     { const f = 1300 + Math.random() * 600; tone(f, 0, 0.09, 'sine', 0.1, f * 1.15); }, // XP orb
+    levelUp() { melody([[784, 0.07], [988, 0.07], [1319, 0.2]], voice, 0.12); },
     bling()  { melody([[1568, 0.06], [2093, 0.06], [2637, 0.16]], 'sine', 0.12); },
     collect() { melody([[988, 0.06], [1319, 0.14]], voice, 0.15); },
     magic()  { melody([[784, 0.07], [988, 0.07], [1175, 0.07], [1568, 0.07], [1976, 0.16]], 'sine', 0.1); },

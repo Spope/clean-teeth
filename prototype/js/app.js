@@ -256,6 +256,8 @@
   // A trick may also have `cls` (classes on the buddy meanwhile) and timed `events`.
   const EASE = { in: 'ease-in', out: 'ease-out', back: 'cubic-bezier(.34, 1.56, .64, 1)', linear: 'linear' };
   const OFF = 420; // fully outside the 466px screen
+  const XP_ORBS = 7;
+  const XP_CHEST = [125, 170]; // where orbs fly to, in the 250x250 buddy box
 
   const TRICKS = {
     // Duck out of view, pop up big and close from the bottom edge (side: -1 left, 0 middle,
@@ -316,6 +318,15 @@
       events: [[0, 'block'], [500, 'hit'], [1100, 'hit'], [1700, 'break']],
     }),
 
+    // Minecraft: XP orbs appear around the ring one after another and zip into Steve, then
+    // he hops as he levels up. Hands stay free, so it also plays while brushing.
+    xp: () => {
+      const events = [];
+      for (let k = 0; k < XP_ORBS; k++) events.push([k * 220, 'orb']);
+      events.push([2250, 'levelup']);
+      return { frames: [[0, 0, 0, 1, 0, 'linear'], [2250, 0, 0, 1, 0, 'out'], [2450, 0, -14, 1, 0, 'in'], [2650, 0, 0, 1, 0]], events };
+    },
+
     // Dragon: Glory's scales cycle through the rainbow while she hops on the spot.
     rainbow: () => {
       const frames = [];
@@ -340,7 +351,7 @@
     },
   };
   const GENERIC_TRICKS = ['peek', 'peekSide', 'slide'];
-  const BRUSHING_TRICKS = ['mine']; // theme tricks that keep the toothbrush in hand
+  const BRUSHING_TRICKS = ['mine', 'xp']; // theme tricks that keep the toothbrush in hand
 
   let trick = null; // { anim, cls, timers, block }
   let nextTrickAt = 0;
@@ -391,6 +402,26 @@
       charHost.classList.remove('rainbow-1', 'rainbow-2', 'rainbow-3', 'rainbow-4', 'rainbow-5');
       charHost.classList.add(name);
       t.cls = name;
+    } else if (name === 'orb') {
+      // Appears on a random spot near the ring, drifts a little, then zips into Steve
+      const orb = themeSprite('xp_orb');
+      const a = rand(0, Math.PI * 2);
+      const [x0, y0] = [CENTER + Math.cos(a) * 190, CENTER + Math.sin(a) * 190];
+      const [x1, y1] = [BUDDY + XP_CHEST[0], BUDDY + XP_CHEST[1]];
+      orb.animate([
+        { transform: at(orb, x0, y0, 0), easing: 'ease-out' },
+        { transform: at(orb, x0 + (x1 - x0) * 0.08, y0 + (y1 - y0) * 0.08, 1), offset: 0.35, easing: 'ease-in' },
+        { transform: at(orb, x1, y1, 0.5) },
+      ], { duration: 900, fill: 'forwards' }).onfinish = () => {
+        orb.remove();
+        t.orbs.delete(orb);
+        Sound.xp();
+        burst(x1, y1, ['#c8f542', '#7fd42a'], 3, 0.4);
+      };
+      t.orbs.add(orb);
+    } else if (name === 'levelup') {
+      Sound.levelUp();
+      burst(BUDDY + XP_CHEST[0], BUDDY + XP_CHEST[1] - 40, ['#c8f542', '#7fd42a', '#fbffd0'], 12, 1.2);
     } else if (name === 'magic') {
       Sound.magic();
     } else if (name === 'whoosh') {
@@ -404,7 +435,7 @@
     const side = name === 'peek' ? Math.floor(Math.random() * 3) - 1 : (Math.random() < 0.5 ? -1 : 1);
     const def = TRICKS[name](side);
     const total = def.frames[def.frames.length - 1][0];
-    const t = { cls: def.cls, timers: [] };
+    const t = { cls: def.cls, timers: [], orbs: new Set() };
     if (def.cls) charHost.classList.add(...def.cls.split(' '));
     t.anim = $('buddy').animate(def.frames.map(([ms, x, y, sc, r, e]) => ({
       offset: ms / total,
@@ -425,6 +456,7 @@
     if (t.cls) charHost.classList.remove(...t.cls.split(' '));
     charHost.classList.remove('hit');
     if (t.block) t.block.remove();
+    t.orbs.forEach((o) => o.remove());
   }
 
   function canTrick() {

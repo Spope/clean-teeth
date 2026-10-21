@@ -12,7 +12,7 @@ const brushy_theme_t brushy_theme_minecraft = {
     .voice = BRUSHY_WAVE_SQUARE,
     .pop_whoosh = false,
     .pop = BRUSHY_POP_CREEPER,
-    .tricks = BRUSHY_TRICK_MINE,
+    .tricks = BRUSHY_TRICK_MINE | BRUSHY_TRICK_XP,
     .teeth_x = 125, .teeth_y = 114,
     .mouth_x = 125, .mouth_y = 114,
     .germ_particles = {
@@ -28,4 +28,5 @@ const brushy_theme_t brushy_theme_minecraft = {
     .poses[BRUSHY_POSE_MINE_BRUSH_B] = &img_minecraft_mine_brush_b,
     .block = &img_minecraft_block,
     .block_cracked = &img_minecraft_block_cracked,
+    .xp_orb = &img_minecraft_xp_orb,
 };

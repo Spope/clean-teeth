@@ -134,6 +134,16 @@
     sparkle: { w: 36, h: 36, svg: px8(['...Y...', '...Y...', '..YWY..', 'YYWWWYY', '..YWY..', '...Y...', '...Y...'], { Y: '#ffe14d', W: '#fff' }) },
     block: { w: 48, h: 48, svg: px8(BLOCK, BLOCK_PAL) },
     block_cracked: { w: 48, h: 48, svg: px8(cracked, BLOCK_PAL) },
+    xp_orb: { w: 32, h: 32, svg: px8([
+      '..gggg..',
+      '.gYYYYg.',
+      'gYWWYYYg',
+      'gYWYYYGg',
+      'gYYYYYGg',
+      'gYYYYGGg',
+      '.gYGGGg.',
+      '..gggg..',
+    ], { g: '#3f8f1a', Y: '#c8f542', W: '#fbffd0', G: '#7fd42a' }) },
   };
 
   // ---------- Diamond reward ----------
@@ -164,7 +174,7 @@
     germsScared: MOBS.map((m) => mob(m.scared, m.pal)),
     germParticles: MOBS.map((m) => m.particles),
     pop: 'creeper',      // the creeper (germ 0) swells and flashes before exploding
-    tricks: ['mine'],    // theme-only tricks (mining also plays while brushing)
+    tricks: ['mine', 'xp'], // theme-only tricks (both also play while brushing)
     teeth: [125, 114],   // where the mirror-check sparkle shines, in the 250x250 buddy box
     mouth: [125, 114],
     sprites,
