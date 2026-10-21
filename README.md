@@ -50,8 +50,6 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
   and flashes white first, with a fuse hiss); Glory spits **venom** at each bug
   (RainWings don't breathe fire), and it melts.
   The screen **shakes** and the remaining germs **shiver with scared faces**.
-- Just past halfway (1:05), the **mirror check**: the buddy shows off a big toothy grin
-  with sparkles.
 - At the end, the **reward drops** out of the buddy, bounces (in pixel steps for Minecraft)
   and flies to the counter, which goes up when it lands.
 

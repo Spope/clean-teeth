@@ -13,7 +13,6 @@
 #define ZONES           4
 #define GERMS_PER_ZONE  3
 #define GERM_COUNT      (ZONES * GERMS_PER_ZONE)
-#define MIRROR_AT_MS    65000 /* just past halfway: show off those clean teeth */
 
 #define SCREEN_SIZE 466
 #define CENTER      (SCREEN_SIZE / 2)
@@ -69,7 +68,6 @@ typedef struct {
     float speed;
     float elapsed_ms;
     int zone;
-    bool mirrored;
     uint32_t phase_since;
     uint32_t mood_since;
     uint32_t last_tick;

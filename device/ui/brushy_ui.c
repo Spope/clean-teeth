@@ -3,8 +3,7 @@
  *   idle     - buddy waits (falls asleep after 30 s); tap to start,
  *              press and hold to switch theme
  *   brushing - 2 minutes, 4 zones of 30 s filling the ring clockwise from top-left;
- *              germs are defeated over time (see brushy_fx.c), a mirror check just past
- *              halfway, tap = giggle
+ *              germs are defeated over time (see brushy_fx.c), tap = giggle
  *   done     - cheer, confetti, "Bravo !", the reward drops into the counter;
  *              back to idle on tap or after 12 s
  * While awake, the buddy plays a random trick every 8-14 s (see brushy_tricks.c).
@@ -493,7 +492,6 @@ static void start(void)
     fx_clear();
     ui.elapsed_ms = 0;
     ui.zone = -1;
-    ui.mirrored = false;
     fx_reset_germs();
     render_clock(0);
     ui_set_mood(MOOD_BRUSHING);
@@ -537,7 +535,6 @@ static void update_brushing(void)
     for(int i = 0; i < GERM_COUNT; i++) {
         if(!ui.germs[i].popped && t >= ui.germs[i].pop_at_ms) fx_defeat_germ(&ui.germs[i]);
     }
-    if(!ui.mirrored && t >= MIRROR_AT_MS) fx_mirror_check();
 
     if(ui.elapsed_ms >= TOTAL_MS) finish();
 }
@@ -697,7 +694,6 @@ void brushy_ui_preview(const char * state, float seconds)
         for(int i = 0; i < GERM_COUNT; i++) { /* skip the effects of earlier germs */
             if(ui.elapsed_ms >= ui.germs[i].pop_at_ms) fx_pop_germ_quietly(&ui.germs[i]);
         }
-        ui.mirrored = ui.elapsed_ms >= MIRROR_AT_MS;
         update_brushing();
     }
     else if(strcmp(state, "done") == 0) {

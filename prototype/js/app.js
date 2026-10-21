@@ -10,7 +10,6 @@
     celebrateSeconds: 12,  // done → idle automatically
     longPressMs: 900,      // hold on the start screen to switch theme
     trickEveryMs: [8000, 14000], // random pause between tricks
-    mirrorAtSeconds: 65,   // just past halfway: show off those clean teeth
   };
 
   const SIZE = 466;
@@ -50,7 +49,6 @@
     phaseSince: performance.now(),
     lastTs: performance.now(),
     stars: store.get('stars', 0),
-    mirrored: false,
   };
 
   // Timers that belong to the current phase; cleared whenever the phase changes
@@ -447,9 +445,8 @@
     $('stage').animate(frames, { duration: 350 });
   }
 
-  // ---------- Mirror check (once per brushing, just past halfway) ----------
+  // ---------- Mirror check (dev panel only: mid-brushing it looked like the end) ----------
   function mirrorCheck() {
-    state.mirrored = true;
     stopTrick();
     setMood('grin');
     Sound.bling();
@@ -604,7 +601,6 @@
     clearFx();
     state.elapsed = 0;
     state.zone = -1;
-    state.mirrored = false;
     resetGerms();
     renderClock(0);
     setMood('brushing');
@@ -639,7 +635,6 @@
     }
 
     germs.forEach((g) => { if (!g.popped && t >= g.popAt) defeatGerm(g); });
-    if (!state.mirrored && t >= CONFIG.mirrorAtSeconds) mirrorCheck();
 
     if (state.elapsed >= CONFIG.totalSeconds) finish();
   }
@@ -766,7 +761,6 @@
       state.elapsed = Number(params.get('t')) || 0;
       const t = Math.min(state.elapsed, CONFIG.totalSeconds);
       germs.forEach((g) => { if (t >= g.popAt) popGerm(g); }); // skip the effects
-      state.mirrored = t >= CONFIG.mirrorAtSeconds;
       updateBrushing();
     } else if (preview === 'done') {
       start();

@@ -293,7 +293,7 @@ void fx_defeat_germ(germ_t * g)
     else explode(g);
 }
 
-/* ---------- Mirror check: proud grin with sparkles on the teeth ---------- */
+/* ---------- Mirror check: proud grin with sparkles on the teeth (dev trigger only) ---------- */
 
 /* v: 0..1000 -> grow to 1.2x and back while turning half a turn */
 static void exec_sparkle(void * obj, int32_t v)
@@ -324,7 +324,6 @@ static void sparkle(int32_t x, int32_t y, uint32_t delay)
 
 void fx_mirror_check(void)
 {
-    ui.mirrored = true;
     tricks_stop();
     ui_override_pose(BRUSHY_POSE_GRIN, 1700);
     SOUND(SND_BLING);
