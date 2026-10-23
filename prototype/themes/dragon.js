@@ -219,7 +219,7 @@
     germsScared: BUGS.map((b) => bug(b, true)),
     germParticles: BUGS.map((b) => [b.color, '#1b1426', '#5dd94a']), // melted by venom
     pop: 'venom',                // Glory spits venom at each bug (RainWings don't breathe fire)
-    tricks: ['rainbow', 'fly'],  // theme-only tricks, start screen only
+    tricks: ['rainbow', 'fly'],  // theme-only tricks
     teeth: [125, 116],           // in the 250x250 buddy box
     mouth: [125, 118],
     sprites,

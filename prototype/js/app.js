@@ -9,7 +9,7 @@
     doneTapGuardMs: 1500,  // ignore taps right after finishing
     celebrateSeconds: 12,  // done → idle automatically
     longPressMs: 900,      // hold on the start screen to switch theme
-    trickEveryMs: [10000, 15000], // random pause between tricks
+    trickEveryMs: [8000, 15000],  // random pause between tricks
   };
 
   const SIZE = 466;
@@ -351,10 +351,10 @@
     },
   };
   const GENERIC_TRICKS = ['peek', 'peekSide', 'slide'];
-  const BRUSHING_TRICKS = ['mine', 'xp']; // theme tricks that keep the toothbrush in hand
 
   let trick = null; // { anim, cls, timers, block }
   let nextTrickAt = 0;
+  let lastTrick = null; // never picked twice in a row
 
   function scheduleTrick() {
     const [min, max] = CONFIG.trickEveryMs;
@@ -366,10 +366,7 @@
   }
 
   function pickTrick() {
-    const list = [...GENERIC_TRICKS];
-    for (const t of state.theme.tricks || []) {
-      if (state.phase === 'idle' || BRUSHING_TRICKS.includes(t)) list.push(t); // others drop the brush
-    }
+    const list = [...GENERIC_TRICKS, ...(state.theme.tricks || [])].filter((t) => t !== lastTrick);
     return list[Math.floor(Math.random() * list.length)];
   }
 
@@ -432,6 +429,7 @@
   function runTrick(name) {
     if (!hasTrick(name)) return;
     stopTrick();
+    lastTrick = name;
     const side = name === 'peek' ? Math.floor(Math.random() * 3) - 1 : (Math.random() < 0.5 ? -1 : 1);
     const def = TRICKS[name](side);
     const total = def.frames[def.frames.length - 1][0];

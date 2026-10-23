@@ -40,7 +40,7 @@ typedef enum {
     BRUSHY_POP_VENOM,    /**< the buddy spits venom at each germ */
 } brushy_pop_t;
 
-/** Theme-only tricks (start screen only, except mining and XP which also play while brushing) */
+/** Theme-only tricks (start screen and while brushing) */
 #define BRUSHY_TRICK_MINE    (1u << 0)
 #define BRUSHY_TRICK_RAINBOW (1u << 1)
 #define BRUSHY_TRICK_FLY     (1u << 2)

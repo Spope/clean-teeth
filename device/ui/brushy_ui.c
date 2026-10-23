@@ -6,7 +6,7 @@
  *              germs are defeated over time (see brushy_fx.c), tap = giggle
  *   done     - cheer, confetti, "Bravo !", the reward drops and is collected;
  *              back to idle on tap or after 12 s
- * While awake, the buddy plays a random trick every 10-15 s (see brushy_tricks.c).
+ * While awake, the buddy plays a random trick every 8-15 s (see brushy_tricks.c).
  */
 #include "brushy_ui_priv.h"
 

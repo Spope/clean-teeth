@@ -39,15 +39,15 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 - Tapping during brushing makes the buddy giggle.
 - At the end: confetti, "Bravo !", and the reward drop.
 - After 30 s without a tap, the buddy falls asleep.
-- Every 10-15 s while awake, the buddy plays a trick:
+- Every 8-15 s while awake, the buddy plays a trick:
   - on the start screen and while brushing: **peek-a-boo** (ducks out, pops up big and close
     from the bottom edge, comes back), **peek from the side** (leans in from an edge to spy,
     twice), **slide** (walks off one side, hops across the whole screen, walks back in),
     and Steve's Minecraft tricks: **mining** (a grass block appears, he breaks it in three
     pickaxe hits with his left hand) and **XP orbs** (orbs appear around the ring and zip
-    into him, each with a "ding", then he levels up);
-  - on the start screen only (they put the toothbrush away): Glory's **rainbow** scales and
-    **flying** across the top of the screen.
+    into him, each with a "ding", then he levels up), and Glory's **rainbow** scales and
+    **flying** across the top of the screen (she briefly puts the toothbrush away);
+  - never the same trick twice in a row.
 - Germs are defeated the theme's way: Minecraft mobs burst into pixels (the creeper swells
   and flashes white first, with a fuse hiss); Glory spits **venom** at each bug
   (RainWings don't breathe fire), and it melts.

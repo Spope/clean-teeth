@@ -8,14 +8,14 @@
  *   xp         Minecraft: XP orbs appear around the ring and zip into Steve, who levels up
  *   rainbow    dragon: scales cycle through the rainbow while hopping
  *   fly        dragon: take off, fly across the top of the screen, glide back
- * Generic tricks, mining and XP play on the start screen and during brushing; rainbow and fly
- * only on the start screen (they put the toothbrush away).
+ * All tricks play on the start screen and during brushing (rainbow and fly briefly put the
+ * toothbrush away).
  */
 #include "brushy_ui_priv.h"
 
 #include <math.h>
 
-#define TRICK_EVERY_MIN 10000
+#define TRICK_EVERY_MIN 8000
 #define TRICK_EVERY_MAX 15000
 #define MAX_FRAMES      16
 #define MAX_EVENTS      12
@@ -38,6 +38,7 @@ typedef struct {
 static struct {
     bool active;
     trick_t kind;
+    trick_t last; /* never picked twice in a row */
     keyframe_t frames[MAX_FRAMES];
     uint8_t n_frames;
     trick_event_t events[MAX_EVENTS];
@@ -49,7 +50,7 @@ static struct {
     struct { lv_obj_t * img; int32_t x0, y0; } orbs[XP_ORBS];
     uint8_t n_orbs;
     int token; /* address used as the animation's var */
-} tr;
+} tr = {.last = TRICK_COUNT};
 
 static const uint16_t MINE_HITS[] = {500, 1100, 1700};
 static const uint32_t DIRT[4] = {0x8b5a2b, 0x6e4520, 0x5dbb3a, 0};
@@ -332,7 +333,7 @@ bool tricks_start(trick_t kind)
 {
     if(!available(kind)) return false;
     tricks_stop();
-    tr.kind = kind;
+    tr.kind = tr.last = kind;
     tr.n_frames = tr.n_events = tr.next_event = tr.hits = tr.n_orbs = 0;
     int side = lv_rand(0, 1) ? 1 : -1;
     switch(kind) {
@@ -392,11 +393,8 @@ void tricks_update(uint32_t now)
 
     trick_t pool[TRICK_COUNT];
     int n = 0;
-    pool[n++] = TRICK_PEEK;
-    pool[n++] = TRICK_PEEK_SIDE;
-    pool[n++] = TRICK_SLIDE;
-    for(trick_t k = TRICK_MINE; k < TRICK_COUNT; k++) { /* rainbow and fly put the toothbrush away */
-        if(available(k) && (idle || k == TRICK_MINE || k == TRICK_XP)) pool[n++] = k;
+    for(trick_t k = 0; k < TRICK_COUNT; k++) {
+        if(available(k) && k != tr.last) pool[n++] = k;
     }
     tricks_start(pool[lv_rand(0, n - 1)]);
 }
