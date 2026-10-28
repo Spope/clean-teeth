@@ -13,8 +13,8 @@ const brushy_theme_t brushy_theme_dragon = {
     .pop_whoosh = true,
     .pop = BRUSHY_POP_VENOM,
     .tricks = BRUSHY_TRICK_RAINBOW | BRUSHY_TRICK_FLY,
-    .teeth_x = 125, .teeth_y = 116,
-    .mouth_x = 125, .mouth_y = 118,
+    .teeth_x = 125, .teeth_y = 101,
+    .mouth_x = 125, .mouth_y = 104,
     .germ_particles = { /* jungle bugs melted by venom */
         {0x8a5cff, 0x1b1426, 0x5dd94a},
         {0xff5fa2, 0x1b1426, 0x5dd94a},

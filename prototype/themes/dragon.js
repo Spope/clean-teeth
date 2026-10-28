@@ -5,8 +5,15 @@
 
   const sparkle = 'M0-11Q2-2 11 0Q2 2 0 11Q-2 2-11 0Q-2-2 0-11Z';
 
-  // Drawn in the style of the graphic novels rather than as a baby dragon: horned head on a
-  // neck, narrow slit-pupil eyes under brow ridges, pointed ruff, long prehensile tail.
+  // Drawn after the book art rather than as a baby dragon, facing us: long neck, wedge head
+  // with a blue face, stern slanted eyes under heavy brows, swept-back horns, orange ruff and
+  // wings, yellow speckles, and a curled prehensile tail.
+  const spots = [
+    [100, 68], [104, 78], [140, 68], [136, 78], [106, 110], [105, 120], [104, 130], [134, 110],
+    [135, 120], [136, 130], [96, 148], [91, 158], [144, 148], [149, 158], [80, 192], [86, 204],
+    [160, 192], [154, 204],
+  ].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8"/>`).join('');
+
   const character = `
 <svg viewBox="0 0 240 240" aria-label="Glory">
   <g class="sparkles">
@@ -18,100 +25,108 @@
 
   <g class="body-all">
     <g class="wings-folded">
-      <path class="wing" d="M100 146 L66 92 Q60 124 50 150 Q60 176 84 190 L102 172 Z"/>
-      <path class="wing" d="M140 146 L174 92 Q180 124 190 150 Q180 176 156 190 L138 172 Z"/>
-      <path class="wing-bone" d="M100 146 L66 92 M140 146 L174 92"/>
+      <path class="membrane" d="M106 138 L70 90 Q62 124 50 150 Q58 176 82 194 L100 176 Z"/>
+      <path class="membrane" d="M134 138 L170 90 Q178 124 190 150 Q182 176 158 194 L140 176 Z"/>
+      <path class="wing-bone" d="M106 138 L70 90 L50 150 M70 90 L82 194 M134 138 L170 90 L190 150 M170 90 L158 194"/>
     </g>
     <g class="wings-open">
-      <path class="wing" d="M98 148 L26 62 Q34 94 14 110 Q36 116 26 140 Q50 140 46 164 Q68 156 96 172 Z"/>
-      <path class="wing" d="M142 148 L214 62 Q206 94 226 110 Q204 116 214 140 Q190 140 194 164 Q172 156 144 172 Z"/>
-      <path class="wing-bone" d="M98 148 L26 62 M142 148 L214 62 M74 104 L36 116 M166 104 L204 116"/>
+      <path class="membrane" d="M104 140 L28 58 Q36 92 14 108 Q36 114 26 140 Q50 140 46 164 Q68 156 96 174 Z"/>
+      <path class="membrane" d="M136 140 L212 58 Q204 92 226 108 Q204 114 214 140 Q190 140 194 164 Q172 156 144 174 Z"/>
+      <path class="wing-bone" d="M104 140 L28 58 M28 58 L14 108 M28 58 L26 140 M28 58 L46 164
+        M136 140 L212 58 M212 58 L226 108 M212 58 L214 140 M212 58 L194 164"/>
     </g>
 
-    <path class="tail" d="M146 214 Q196 226 214 198 Q230 170 210 152 Q194 140 184 154 Q178 166 192 168"/>
+    <path class="tail" d="M146 216 Q194 228 211 202"/>
+    <path class="tail tip" d="M211 202 Q226 174 208 160 Q194 152 188 166 Q186 176 198 174 Q204 172 202 166"/>
 
-    <ellipse class="scale" cx="88" cy="204" rx="17" ry="22"/>
-    <ellipse class="scale" cx="152" cy="204" rx="17" ry="22"/>
-    <path class="scale" d="M102 104 L98 146 Q78 176 92 206 Q120 222 148 206 Q162 176 142 146 L138 104 Z"/>
-    <path class="belly" d="M110 108 Q120 112 130 108 L134 146 Q144 180 120 212 Q96 180 106 146 Z"/>
-    <path class="belly-lines" d="M110 120 H130 M109 132 H131 M108 144 H132 M104 158 H136 M102 172 H138 M104 186 H136 M110 200 H130"/>
-    <ellipse class="scale-dark" cx="84" cy="226" rx="17" ry="7"/>
-    <ellipse class="scale-dark" cx="156" cy="226" rx="17" ry="7"/>
+    <ellipse class="scale" cx="84" cy="202" rx="15" ry="22"/>
+    <ellipse class="scale" cx="156" cy="202" rx="15" ry="22"/>
+    <ellipse class="scale-dark" cx="80" cy="227" rx="15" ry="6"/>
+    <ellipse class="scale-dark" cx="160" cy="227" rx="15" ry="6"/>
+    <path class="scale" d="M104 128 Q84 150 86 180 Q88 206 104 216 L136 216 Q152 206 154 180 Q156 150 136 128 Z"/>
+    <path class="scale" d="M110 90 L106 136 L134 136 L130 90 Z"/>
+    <path class="belly" d="M113 96 L127 96 L132 140 Q144 176 131 212 L109 212 Q96 176 108 140 Z"/>
+    <path class="belly-lines" d="M113 108 H127 M112 118 H128 M111 128 H129 M108 142 H132 M105 156 H135 M104 170 H136 M104 184 H136 M106 198 H134"/>
+    <g class="spikes">
+      <path d="M104 112 l-8 -2 l7 8 Z M103 124 l-8 0 l7 7 Z M136 112 l8 -2 l-7 8 Z M137 124 l8 0 l-7 7 Z"/>
+    </g>
+    <g class="spots">${spots}</g>
+
+    <path class="scale arm" d="M104 146 Q94 178 100 220 L92 230 L114 232 L112 220 Q110 182 116 152 Z"/>
+    <path class="scale arm arm-r" d="M136 146 Q146 178 140 220 L148 230 L126 232 L128 220 Q130 182 124 152 Z"/>
+    <path class="texture" d="M100 170 l4 -3 l4 3 M140 170 l-4 -3 l-4 3 M78 196 l5 -4 l5 4 M162 196 l-5 -4 l-5 4"/>
     <g class="claws">
-      <path d="M70 226 l-3 7 l7 -3Z M80 228 l-1 7 l6 -4Z M90 228 l1 7 l4 -6Z"/>
-      <path d="M170 226 l3 7 l-7 -3Z M160 228 l1 7 l-6 -4Z M150 228 l-1 7 l-4 -6Z"/>
+      <path d="M68 228 l-4 6 l7 -2 Z M92 230 l-3 5 l6 -2 Z M98 231 l-1 5 l5 -3 Z"/>
+      <path d="M172 228 l4 6 l-7 -2 Z"/>
+      <path class="arm-r" d="M148 230 l3 5 l-6 -2 Z M142 231 l1 5 l-5 -3 Z"/>
     </g>
-    <path class="scale arm" d="M100 150 Q88 166 96 186 Q102 190 106 184 Q100 168 108 156 Z"/>
-    <path class="scale arm arm-r" d="M140 150 Q152 166 144 186 Q138 190 134 184 Q140 168 132 156 Z"/>
-    <path class="texture" d="M92 176 l4 -4 l4 4 M146 176 l-4 -4 l-4 4 M84 200 l4 -4 l4 4 M156 200 l-4 -4 l-4 4"/>
 
     <g class="frills">
-      <path d="M86 60 Q62 34 38 26 Q56 50 84 74 Z"/>
-      <path d="M82 72 Q52 66 26 72 Q52 84 82 86 Z"/>
-      <path d="M84 86 Q58 98 40 118 Q66 108 90 98 Z"/>
-      <path d="M154 60 Q178 34 202 26 Q184 50 156 74 Z"/>
-      <path d="M158 72 Q188 66 214 72 Q188 84 158 86 Z"/>
-      <path d="M156 86 Q182 98 200 118 Q174 108 150 98 Z"/>
+      <path d="M94 42 L64 22 L90 56 Z"/>
+      <path d="M92 56 L58 56 L94 66 Z"/>
+      <path d="M98 68 L68 86 L104 78 Z"/>
+      <path d="M146 42 L176 22 L150 56 Z"/>
+      <path d="M148 56 L182 56 L146 66 Z"/>
+      <path d="M142 68 L172 86 L136 78 Z"/>
     </g>
     <g class="horns">
-      <path d="M96 48 Q86 24 70 12 Q90 22 106 44 Z"/>
-      <path d="M144 48 Q154 24 170 12 Q150 22 134 44 Z"/>
+      <path d="M105 32 Q94 12 76 4 Q96 9 114 28 Z"/>
+      <path d="M135 32 Q146 12 164 4 Q144 9 126 28 Z"/>
     </g>
 
-    <path class="scale" d="M80 70 Q80 38 120 36 Q160 38 160 70 Q160 90 146 102 Q138 120 120 122 Q102 120 94 102 Q80 90 80 70 Z"/>
-    <path class="snout" d="M100 96 Q120 88 140 96 Q138 116 120 120 Q102 116 100 96 Z"/>
-    <path class="texture" d="M112 46 l8 6 l8 -6 M114 56 l6 4 l6 -4"/>
-    <ellipse class="scale-dark" cx="113" cy="101" rx="2.5" ry="1.5" transform="rotate(-20 113 101)"/>
-    <ellipse class="scale-dark" cx="127" cy="101" rx="2.5" ry="1.5" transform="rotate(20 127 101)"/>
+    <path class="scale" d="M120 24 Q142 24 148 42 Q152 56 144 66 Q136 76 134 90 Q132 102 120 104 Q108 102 106 90 Q104 76 96 66 Q88 56 92 42 Q98 24 120 24 Z"/>
+    <path class="face" d="M120 24 Q142 24 148 42 Q150 52 145 60 Q134 58 128 68 L128 92 Q120 96 112 92 L112 68 Q106 58 95 60 Q90 52 92 42 Q98 24 120 24 Z"/>
+    <path class="texture" d="M112 34 l8 5 l8 -5"/>
+    <path class="line thin" d="M114 88 l2 2 M126 88 l-2 2"/>
 
     <g class="eyes-open">
-      <path class="eye-white" d="M88 76 Q98 64 114 72 Q104 84 88 76 Z"/>
-      <path class="eye-white" d="M152 76 Q142 64 126 72 Q136 84 152 76 Z"/>
-      <ellipse class="iris" cx="102" cy="73.5" rx="5.5" ry="6"/>
-      <ellipse class="iris" cx="138" cy="73.5" rx="5.5" ry="6"/>
-      <ellipse class="pupil" cx="102" cy="73.5" rx="1.6" ry="5"/>
-      <ellipse class="pupil" cx="138" cy="73.5" rx="1.6" ry="5"/>
-      <circle class="glint" cx="104" cy="71" r="1.4"/>
-      <circle class="glint" cx="140" cy="71" r="1.4"/>
+      <path class="iris" d="M95 49 Q105 45 115 55 Q103 59 95 49 Z"/>
+      <path class="iris" d="M145 49 Q135 45 125 55 Q137 59 145 49 Z"/>
+      <ellipse class="pupil" cx="105.5" cy="52" rx="1.3" ry="3.6"/>
+      <ellipse class="pupil" cx="134.5" cy="52" rx="1.3" ry="3.6"/>
+      <circle class="glint" cx="108" cy="51" r="1.1"/>
+      <circle class="glint" cx="137" cy="51" r="1.1"/>
     </g>
-    <g class="eyes-closed line">
-      <path d="M88 76 Q100 80 114 74"/>
-      <path d="M152 76 Q140 80 126 74"/>
+    <g class="eyes-closed line thin">
+      <path d="M95 50 Q105 56 115 55"/>
+      <path d="M145 50 Q135 56 125 55"/>
     </g>
-    <g class="eyes-happy line">
-      <path d="M88 78 Q100 68 114 76"/>
-      <path d="M152 78 Q140 68 126 76"/>
+    <g class="eyes-happy line thin">
+      <path d="M95 52 Q105 46 115 54"/>
+      <path d="M145 52 Q135 46 125 54"/>
     </g>
-    <path class="brow" d="M86 66 Q100 58 115 63 M154 66 Q140 58 125 63"/>
+    <path class="brow" d="M91 45 Q105 40 117 51 M149 45 Q135 40 123 51"/>
 
     <g class="mouth">
-      <path class="line thin" d="M104 110 Q122 116 137 107"/>
-      <path class="fang" d="M107 111 l2 5 l2 -4 Z"/>
-      <path class="fang" d="M129 112 l2 4 l2 -5 Z"/>
+      <path class="line thin" d="M109 96 Q120 100 131 96"/>
+      <path class="fang" d="M111 97 l2 6 l2 -5 Z"/>
+      <path class="fang" d="M125 98 l2 5 l2 -6 Z"/>
     </g>
     <g class="mouth-grin">
-      <path class="mouth-inside" d="M100 106 Q120 124 140 106 Q120 112 100 106 Z"/>
-      <path class="fang" d="M103 107 Q120 112 137 107 L135 111 Q120 116 105 111 Z"/>
+      <path class="mouth-inside" d="M106 93 Q120 110 134 93 Q120 99 106 93 Z"/>
+      <path class="fang" d="M108 94 Q120 99 132 94 L130 98 Q120 103 110 98 Z"/>
     </g>
     <g class="mouth-spit">
-      <ellipse class="mouth-inside" cx="120" cy="112" rx="9" ry="7"/>
-      <path class="fang" d="M113 106 l2 6 l2 -5 Z"/>
-      <path class="fang" d="M123 107 l2 5 l2 -6 Z"/>
-      <circle cx="120" cy="114" r="3.5" fill="#1b1426" stroke="#5dd94a" stroke-width="1.5"/>
+      <ellipse class="mouth-inside" cx="120" cy="99" rx="9" ry="7"/>
+      <path class="fang" d="M113 93 l2 6 l2 -5 Z"/>
+      <path class="fang" d="M123 94 l2 5 l2 -6 Z"/>
+      <circle cx="120" cy="101" r="3.5" fill="#1b1426" stroke="#5dd94a" stroke-width="1.5"/>
     </g>
 
     <g class="foam">
-      <circle cx="102" cy="118" r="4"/>
-      <circle cx="95"  cy="112" r="3"/>
-      <circle cx="108" cy="124" r="2.5"/>
-      <circle cx="140" cy="119" r="3.5"/>
+      <circle cx="104" cy="102" r="4"/>
+      <circle cx="98" cy="95" r="3"/>
+      <circle cx="110" cy="108" r="2.5"/>
+      <circle cx="137" cy="103" r="3.5"/>
     </g>
     <g class="brush">
-      <path class="arm-brush" d="M138 154 Q170 150 182 118"/>
-      <rect class="brush-handle" x="126" y="106" width="60" height="8" rx="4"/>
-      <rect class="brush-head" x="110" y="103" width="22" height="13" rx="4"/>
-      <rect class="bristles" x="112" y="97" width="18" height="7" rx="2"/>
-      <circle class="scale" cx="184" cy="112" r="8"/>
+      <path class="arm-brush-edge" d="M134 152 Q164 140 156 104"/>
+      <path class="arm-brush" d="M134 152 Q164 140 156 104"/>
+      <rect class="brush-handle" x="126" y="93" width="30" height="7" rx="3.5"/>
+      <rect class="brush-head" x="106" y="91" width="22" height="11" rx="3.5"/>
+      <rect class="bristles" x="108" y="86" width="18" height="6" rx="2"/>
+      <circle class="hand" cx="156" cy="97" r="7"/>
+      <path class="claws" d="M150 92 l-4 -1 l3 4 Z M149 99 l-4 1 l4 3 Z"/>
     </g>
   </g>
 
@@ -182,16 +197,16 @@
   };
 
   // RainWing rainbow: 5 scale palettes cycled by the "rainbow" trick
-  const RAINBOW = [
-    ['#ff5a6e', '#d93a50', '#ff8a98', '#ffe3e7', '#ffc2ca', '#ffd23f', '#ff9f43', '#c93a4e'],
-    ['#ff9a3c', '#e07a1f', '#ffb870', '#fff0dc', '#ffd9b0', '#ff5a6e', '#ffd23f', '#d0741f'],
-    ['#ffd23f', '#e0b21f', '#ffe27a', '#fffbe0', '#fff0a8', '#3fbfa0', '#ff9a3c', '#d0a81f'],
-    ['#4aa8ff', '#2f86dd', '#86c4ff', '#e3f1ff', '#bcdcff', '#ffd23f', '#a66bff', '#2f78c9'],
-    ['#a66bff', '#844ddd', '#c49bff', '#f0e6ff', '#dcc8ff', '#7ce3ff', '#ff7ac2', '#7a44c9'],
+  const RAINBOW = [ // scale, dark, face, belly, belly line, frill, frill edge, wing membrane
+    ['#ff5a6e', '#d93a50', '#b82a5a', '#ffe3e7', '#ffc2ca', '#ffd23f', '#ff9f43', '#ffb03f'],
+    ['#ff9a3c', '#e07a1f', '#d9462a', '#fff0dc', '#ffd9b0', '#ff5a6e', '#d93a50', '#ffd23f'],
+    ['#ffd23f', '#e0b21f', '#ff8a2e', '#fffbe0', '#fff0a8', '#3fbfa0', '#2a9a80', '#ff9a3c'],
+    ['#4aa8ff', '#2f86dd', '#2f55c8', '#e3f1ff', '#bcdcff', '#ffd23f', '#ff9f43', '#a66bff'],
+    ['#a66bff', '#844ddd', '#5e3cc8', '#f0e6ff', '#dcc8ff', '#7ce3ff', '#3fb0d8', '#ff7ac2'],
   ];
-  const rainbowCss = RAINBOW.map(([sc, dark, snout, belly, line, frill, frill2, wing], i) =>
-    `.theme-dragon .character.rainbow-${i + 1} { --scale: ${sc}; --scale-dark: ${dark}; --snout: ${snout}; --belly: ${belly};
-      --belly-line: ${line}; --frill: ${frill}; --frill-2: ${frill2}; --wing: ${wing}; }`).join('\n');
+  const rainbowCss = RAINBOW.map(([sc, dark, face, belly, line, frill, frill2, membrane], i) =>
+    `.theme-dragon .character.rainbow-${i + 1} { --scale: ${sc}; --scale-dark: ${dark}; --face: ${face}; --belly: ${belly};
+      --belly-line: ${line}; --frill: ${frill}; --frill-2: ${frill2}; --membrane: ${membrane}; --spots: ${belly}; }`).join('\n');
 
   // Treasure gem (dragons love treasure)
   const reward = `<svg viewBox="0 0 24 24">
@@ -220,8 +235,8 @@
     germParticles: BUGS.map((b) => [b.color, '#1b1426', '#5dd94a']), // melted by venom
     pop: 'venom',                // Glory spits venom at each bug (RainWings don't breathe fire)
     tricks: ['rainbow', 'fly'],  // theme-only tricks
-    teeth: [125, 116],           // in the 250x250 buddy box
-    mouth: [125, 118],
+    teeth: [125, 101],           // in the 250x250 buddy box
+    mouth: [125, 104],
     sprites,
     reward,
 
@@ -254,41 +269,45 @@ ${T} .t-bravo {
 
 /* Scale colours by mood (RainWing!) */
 ${T} .character {
-  --scale: #3fbfa0; --scale-dark: #2a9a80; --snout: #6fd6bd; --belly: #d8f5c4; --belly-line: #b5e3a0;
-  --frill: #ffcf4a; --frill-2: #ff9f43; --wing: #2f8f78; --iris: #f0b429; --ink: #1e1a33;
+  --scale: #2fbf9f; --scale-dark: #1f8a74; --face: #2f7fd8; --belly: #e6f4e2; --belly-line: #bcdcc4;
+  --frill: #ff7a2e; --frill-2: #d9461f; --membrane: #ff8a3c; --spots: #ffe14d;
+  --horn: #6b6385; --claw: #efe2c4; --iris: #c6f04a; --ink: #1e1a33;
 }
 ${T} .character.mood-sleepy {
-  --scale: #8a8fe0; --scale-dark: #6c70c4; --snout: #a9adf2; --belly: #e4e2ff; --belly-line: #c9c6f5;
-  --frill: #c3b5ff; --frill-2: #9a8cf0; --wing: #6a6ec0;
+  --scale: #8a8fe0; --scale-dark: #6c70c4; --face: #6a5fc8; --belly: #e4e2ff; --belly-line: #c9c6f5;
+  --frill: #c3b5ff; --frill-2: #9a8cf0; --membrane: #b7a6ff; --spots: #e6e0ff;
 }
 ${T} .character.mood-cheer {
-  --scale: #ff7ac2; --scale-dark: #e0559f; --snout: #ff9fd3; --belly: #ffe3f1; --belly-line: #ffc2df;
-  --frill: #ffe066; --frill-2: #7ce3ff; --wing: #d94d96;
+  --scale: #ff7ac2; --scale-dark: #e0559f; --face: #a65be0; --belly: #ffe3f1; --belly-line: #ffc2df;
+  --frill: #ffe066; --frill-2: #ffb020; --membrane: #ffd23f; --spots: #fff3a0;
 }
 
 ${T} .scale      { fill: var(--scale); }
 ${T} .scale-dark { fill: var(--scale-dark); }
-${T} .snout      { fill: var(--snout); }
+${T} .face       { fill: var(--face); }
 ${T} .belly      { fill: var(--belly); }
-${T} .belly-lines { fill: none; stroke: var(--belly-line); stroke-width: 3; stroke-linecap: round; }
-${T} .tail       { fill: none; stroke: var(--scale-dark); stroke-width: 11; stroke-linecap: round; }
-${T} .wing       { fill: var(--wing); stroke: var(--scale-dark); stroke-width: 3; stroke-linejoin: round; }
-${T} .wing-bone  { fill: none; stroke: var(--scale-dark); stroke-width: 5; stroke-linecap: round; }
-${T} .frills path { fill: var(--frill); stroke: var(--frill-2); stroke-width: 2.5; stroke-linejoin: round; }
-${T} .horns      { fill: #efe2c4; stroke: #b9a57c; stroke-width: 1.5; stroke-linejoin: round; }
+${T} .belly-lines { fill: none; stroke: var(--belly-line); stroke-width: 2.5; stroke-linecap: round; }
+${T} .spots      { fill: var(--spots); }
+${T} .tail       { fill: none; stroke: var(--scale-dark); stroke-width: 12; stroke-linecap: round; }
+${T} .tail.tip   { stroke-width: 7; }
+${T} .membrane   { fill: var(--membrane); stroke: var(--frill-2); stroke-width: 2; stroke-linejoin: round; }
+${T} .wing-bone  { fill: none; stroke: var(--scale-dark); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+${T} .frills path, ${T} .spikes { fill: var(--frill); stroke: var(--frill-2); stroke-width: 1.5; stroke-linejoin: round; }
+${T} .horns      { fill: var(--horn); stroke: #9a93b5; stroke-width: 1.2; stroke-linejoin: round; }
 ${T} .texture    { fill: none; stroke: var(--scale-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
-${T} .brow       { fill: none; stroke: var(--scale-dark); stroke-width: 4; stroke-linecap: round; }
+${T} .brow       { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
 ${T} .glint      { fill: #fff; }
-${T} .claws      { fill: #efe2c4; }
-${T} .eye-white  { fill: #fff; }
-${T} .iris       { fill: var(--iris); }
+${T} .claws      { fill: var(--claw); }
+${T} .hand       { fill: var(--scale); stroke: var(--scale-dark); stroke-width: 2; }
+${T} .iris       { fill: var(--iris); stroke: var(--ink); stroke-width: 1; }
 ${T} .pupil      { fill: var(--ink); }
 ${T} .line       { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
-${T} .line.thin  { stroke-width: 2.5; }
+${T} .line.thin  { stroke-width: 2.2; }
 ${T} .fang       { fill: #fff; }
 ${T} .mouth-inside { fill: #4a1f3d; }
 ${T} .foam       { fill: #fff; opacity: .9; }
-${T} .arm-brush  { fill: none; stroke: var(--scale); stroke-width: 11; stroke-linecap: round; }
+${T} .arm-brush-edge { fill: none; stroke: var(--scale-dark); stroke-width: 13; stroke-linecap: round; }
+${T} .arm-brush  { fill: none; stroke: var(--scale); stroke-width: 9; stroke-linecap: round; }
 ${T} .brush-handle { fill: #4fc3f7; }
 ${T} .brush-head   { fill: #fff; }
 ${T} .bristles     { fill: #c8f0ff; }
@@ -304,7 +323,7 @@ ${T} .body-all, ${T} .eyes-open, ${T} .brush, ${T} .foam, ${T} .sparkles path, $
 }
 ${T} .body-all { transform-origin: 50% 100%; }
 
-${T} .mood-idle .body-all  { animation: rw-bob 2s ease-in-out infinite; }
+${T} .mood-idle .body-all  { animation: rw-bob 3s ease-in-out infinite; }
 ${T} .mood-idle .eyes-open { animation: rw-blink 4s infinite; }
 
 ${T} .mood-sleepy .eyes-open   { display: none; }
@@ -322,8 +341,8 @@ ${T} .mood-brushing .foam  { animation: rw-foam .5s ease-in-out infinite alterna
 ${T} .mood-brushing .body-all  { animation: rw-wiggle .56s ease-in-out infinite alternate; }
 ${T} .mood-brushing .eyes-open { animation: rw-blink 3s infinite; }
 
-${T} .mood-cheer .eyes-open, ${T} .mood-cheer .wings-folded { display: none; }
-${T} .mood-cheer .eyes-happy, ${T} .mood-cheer .sparkles, ${T} .mood-cheer .wings-open { display: inline; }
+${T} .mood-cheer .wings-folded { display: none; }
+${T} .mood-cheer .sparkles, ${T} .mood-cheer .wings-open { display: inline; }
 ${T} .mood-cheer .body-all { animation: rw-jump .7s ease-in-out infinite; }
 ${T} .mood-cheer .sparkles path { animation: rw-twinkle 1s ease-in-out infinite alternate; }
 ${T} .mood-cheer .sparkles path:nth-child(2) { animation-delay: .3s; }
@@ -347,7 +366,7 @@ ${T} .trick-fly.flap .wings-open { transform: scaleY(.55); }
 
 ${rainbowCss}
 
-@keyframes rw-bob     { 50% { transform: translateY(-5px); } }
+@keyframes rw-bob     { 50% { transform: translateY(-3px); } }
 @keyframes rw-blink   { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
 @keyframes rw-breathe { 50% { transform: scale(1.03, .98); } }
 @keyframes rw-zzz     { 0% { opacity: 0; transform: translateY(6px); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
