@@ -166,7 +166,34 @@ The poses and sprites to export are read from the theme itself (`tools/theme_ass
 A new theme also needs `device/ui/themes/<id>.c` (copy `dragon.c`), an entry in
 `themes/themes.c`, and a line in `device/sim/CMakeLists.txt`.
 
-## Phase 3 — on the real board (next)
+## Phase 3 — on the real board (current)
 
-Add an ESP-IDF project that reuses `device/ui/`, with the board's display, touch,
-audio and NVS storage behind `brushy_hal.h`.
+`device/esp32/` is an ESP-IDF project that builds the same `device/ui/` code for the
+Waveshare ESP32-S3 Touch AMOLED 1.75. Waveshare's board package
+(`waveshare/esp32_s3_touch_amoled_1_75`) brings up the CO5300 display (rounding redraw
+areas to even coordinates, which the panel needs), the CST9217 touch, the ES8311 speaker
+codec and the LVGL task. `main/hal_esp32.c` implements `brushy_hal.h`: sounds are
+rendered by an audio task and played through the speaker, settings go to NVS.
+
+### Build and flash (macOS)
+
+Needs ESP-IDF 5.5 with the ESP32-S3 toolchain (`~/esp/esp-idf/install.sh esp32s3`, once).
+
+```sh
+. ~/esp/esp-idf/export.sh
+cd device/esp32
+idf.py build                                     # first build downloads the components
+idf.py -p /dev/cu.usbmodem* flash monitor        # Ctrl-] quits the monitor
+```
+
+If flashing fails to connect, unplug USB, hold BOOT while plugging it back in, and try again.
+
+Memory: the artwork (about 6 MB) is linked into the app and read straight from flash;
+LVGL's heap and the draw buffers are in the 8 MB PSRAM.
+
+### Still to do
+
+- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`),
+  frame rate of the big peek-a-boo zoom and the screen shake.
+- Power: dim or switch off the screen while the buddy sleeps, and power off after a while
+  on battery (the AXP2101 PMU and the PWR button).

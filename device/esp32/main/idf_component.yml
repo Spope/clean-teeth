@@ -1,0 +1,7 @@
+dependencies:
+  idf: ">=5.5"
+  # Board support: CO5300 display (with the even-coordinate rounder), CST9217 touch,
+  # ES8311 speaker codec, IO expander, LVGL task via esp_lvgl_adapter.
+  waveshare/esp32_s3_touch_amoled_1_75: "==3.0.1"
+  # Same LVGL as the simulator (device/sim/CMakeLists.txt)
+  lvgl/lvgl: "==9.5.0"

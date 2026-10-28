@@ -5,3 +5,5 @@ build/
 .pio/
 sdkconfig.old
 managed_components/
+# generated from device/esp32/sdkconfig.defaults by idf.py
+device/esp32/sdkconfig
