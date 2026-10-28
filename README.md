@@ -149,7 +149,7 @@ Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
 - **Lettering:** "Bravo !" is an image rendered in each theme's font.
   The big countdown digits are alpha-only (A8) images, tinted with the zone colour.
 - **Sounds:** note sequences in `brushy_ui.c` played in the theme's voice, synthesized by
-  the platform layer.
+  `brushy_synth.c` (shared by the simulator and the board) and played by the platform layer.
 - **Themes:** `device/ui/themes/<id>.c` (colours, sound flavour; images are wired up by
   `BRUSHY_THEME_IMAGES`), listed in `themes/themes.c`.
 

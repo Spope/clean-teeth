@@ -46,6 +46,7 @@ add_executable(brushy_sim
     ${UI_DIR}/brushy_ui.c
     ${UI_DIR}/brushy_fx.c
     ${UI_DIR}/brushy_tricks.c
+    ${UI_DIR}/brushy_synth.c
     ${UI_DIR}/themes/themes.c
     ${UI_DIR}/themes/minecraft.c
     ${UI_DIR}/themes/dragon.c
@@ -54,6 +55,6 @@ add_executable(brushy_sim
 target_include_directories(brushy_sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${UI_DIR} ${ASSET_DIR})
 target_link_libraries(brushy_sim PRIVATE lvgl PkgConfig::SDL2 m)
 set_source_files_properties(main.c hal_sim.c ${UI_DIR}/brushy_ui.c ${UI_DIR}/brushy_fx.c
-    ${UI_DIR}/brushy_tricks.c ${UI_DIR}/themes/themes.c
+    ${UI_DIR}/brushy_tricks.c ${UI_DIR}/brushy_synth.c ${UI_DIR}/themes/themes.c
     ${UI_DIR}/themes/minecraft.c ${UI_DIR}/themes/dragon.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra")

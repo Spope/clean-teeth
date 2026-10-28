@@ -1,13 +1,13 @@
 /**
  * Simulator implementation of brushy_hal.h:
- *   sound   - tiny synthesizer queued to SDL audio
+ *   sound   - brushy_synth.c, queued to SDL audio
  *   storage - settings in ~/.brushy-buddy-sim, one "key value" per line
  */
 #include "brushy_hal.h"
+#include "brushy_synth.h"
 #include "hal_sim.h"
 
 #include <SDL2/SDL.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,51 +32,14 @@ void hal_sim_init(bool mute)
     else fprintf(stderr, "audio disabled: %s\n", SDL_GetError());
 }
 
-static float wave_sample(uint8_t wave, double phase)
-{
-    double s = sin(phase);
-    switch(wave) {
-        case BRUSHY_WAVE_TRIANGLE: return (float)(2.0 / M_PI * asin(s));
-        case BRUSHY_WAVE_SQUARE: return s >= 0 ? 1.0f : -1.0f;
-        default: return (float)s;
-    }
-}
-
 void brushy_hal_play(const brushy_note_t * notes, uint32_t count)
 {
     if(muted || !audio_dev) return;
 
-    uint32_t total = 0;
-    for(uint32_t i = 0; i < count; i++) total += notes[i].ms * SAMPLE_RATE / 1000;
-    float * buf = calloc(total, sizeof(float));
+    uint32_t total = brushy_synth_length(notes, count, SAMPLE_RATE);
+    float * buf = malloc(total * sizeof(float));
     if(!buf) return;
-
-    float * out = buf;
-    double phase = 0;
-    float noise_lp = 0; /* low-pass state for the noise "fwoosh" */
-    for(uint32_t i = 0; i < count; i++) {
-        const brushy_note_t * n = &notes[i];
-        uint32_t len = n->ms * SAMPLE_RATE / 1000;
-        float gain = n->volume / 100.0f * 0.3f;
-        for(uint32_t s = 0; s < len && n->freq; s++) {
-            double t = (double)s / SAMPLE_RATE;
-            double dur = n->ms / 1000.0;
-            double f = n->freq_end ? n->freq * pow((double)n->freq_end / n->freq, t / dur) : n->freq;
-            double env = fmin(1.0, t / 0.01) * exp(-4.0 * t / dur); /* quick attack, smooth decay */
-            float v;
-            if(n->wave == BRUSHY_WAVE_NOISE) { /* noise through a sweeping low-pass filter */
-                float k = (float)fmin(1.0, 2 * M_PI * f / SAMPLE_RATE);
-                noise_lp += k * ((float)((double)rand() / RAND_MAX * 2 - 1) - noise_lp);
-                v = noise_lp * 2;
-            }
-            else {
-                phase += 2 * M_PI * f / SAMPLE_RATE;
-                v = wave_sample(n->wave, phase);
-            }
-            out[s] = (float)(gain * env) * v;
-        }
-        out += len;
-    }
+    brushy_synth_render(notes, count, SAMPLE_RATE, buf);
     SDL_QueueAudio(audio_dev, buf, total * sizeof(float));
     free(buf);
 }
