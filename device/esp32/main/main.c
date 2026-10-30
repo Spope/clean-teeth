@@ -9,7 +9,34 @@
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 
+#include <string.h>
+
 static const char * TAG = "brushy";
+
+#if CONFIG_BRUSHY_BENCH
+/* Plays every scene and trick in turn so LVGL's perf monitor logs the frame rate of each */
+static const struct { const char * theme, * what; } bench_steps[] = {
+    {"minecraft", "idle"}, {"minecraft", "sleepy"}, {"minecraft", "brushing"}, {"minecraft", "peek"},
+    {"minecraft", "peek_side"}, {"minecraft", "slide"}, {"minecraft", "mine"}, {"minecraft", "xp"},
+    {"minecraft", "shake"},
+    {"dragon", "idle"}, {"dragon", "sleepy"}, {"dragon", "brushing"}, {"dragon", "peek"},
+    {"dragon", "peek_side"}, {"dragon", "slide"}, {"dragon", "rainbow"}, {"dragon", "fly"},
+    {"dragon", "shake"},
+};
+
+static void bench_step(lv_timer_t * t)
+{
+    static uint32_t i;
+    const char * theme = bench_steps[i].theme, * what = bench_steps[i].what;
+    ESP_LOGI(TAG, "bench: %s %s", theme, what);
+    brushy_ui_set_theme(theme);
+    if(strcmp(what, "idle") == 0 || strcmp(what, "sleepy") == 0 || strcmp(what, "brushing") == 0) {
+        brushy_ui_preview(what, 20);
+    }
+    else brushy_ui_trick(what);
+    i = (i + 1) % (sizeof(bench_steps) / sizeof(bench_steps[0]));
+}
+#endif
 
 void app_main(void)
 {
@@ -21,6 +48,9 @@ void app_main(void)
 
     bsp_display_lock(-1); /* LVGL runs in the adapter's task: take its lock for any lv_ call */
     brushy_ui_create(lv_screen_active());
+#if CONFIG_BRUSHY_BENCH
+    lv_timer_create(bench_step, 6000, NULL);
+#endif
     bsp_display_unlock();
 
     ESP_LOGI(TAG, "running; free heap: %u KB internal, %u KB PSRAM",

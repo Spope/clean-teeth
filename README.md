@@ -188,12 +188,29 @@ idf.py -p /dev/cu.usbmodem* flash monitor        # Ctrl-] quits the monitor
 
 If flashing fails to connect, unplug USB, hold BOOT while plugging it back in, and try again.
 
-Memory: the artwork (about 6 MB) is linked into the app and read straight from flash;
+Memory: the artwork (about 8 MB) is linked into the app and read straight from flash;
 LVGL's heap and the draw buffers are in the 8 MB PSRAM.
+
+### Frame rate
+
+LVGL draws in software, and rotating or scaling an image costs the ESP32-S3 several
+milliseconds per image and frame. So what moves all the time avoids it: the germ wobble
+and Glory's brushing sway swap between pre-rotated frames (`TILTS` in `tools/png2lvgl.py`),
+and the ring draws its arcs only where the redrawn area touches it (`ring_draw_cb`).
+
+To measure, build the benchmark: it plays every scene and trick in turn and logs the
+frame rate and render time every few hundred ms.
+
+```sh
+idf.py -B build_bench -D SDKCONFIG=build_bench/sdkconfig \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.bench" -p /dev/cu.usbmodem* flash monitor
+```
 
 ### Still to do
 
-- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`),
-  frame rate of the big peek-a-boo zoom and the screen shake.
+- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`).
+- Frame rate of the tricks that zoom or rotate the whole buddy (peek-a-boo, peek from the
+  side, slide, mining, flying: down to 5-15 FPS at their biggest moments) and of Glory's
+  sleepy breathing (30-50 FPS).
 - Power: dim or switch off the screen while the buddy sleeps, and power off after a while
   on battery (the AXP2101 PMU and the PWR button).

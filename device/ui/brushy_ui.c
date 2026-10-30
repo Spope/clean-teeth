@@ -18,8 +18,9 @@
 #define DONE_TAP_GUARD_MS 1500
 #define LONG_PRESS_MS     900
 
-#define RING_DIAM       448 /* 18 px stroke centred on r = 215 */
+#define RING_RADIUS     224 /* outer edge; 18 px stroke centred on r = 215 */
 #define RING_WIDTH      18
+#define TRACK_OPA       25
 #define BLOCKS_PER_ZONE 8   /* blocky style */
 #define CONFETTI        50
 
@@ -70,10 +71,8 @@ void ui_play_melody(const brushy_note_t * notes, uint32_t count)
 /* ---------- Helpers ---------- */
 
 static void exec_translate_y(void * obj, int32_t v) { lv_obj_set_style_translate_y(obj, v, 0); }
-static void exec_arc_opa(void * obj, int32_t v) { lv_obj_set_style_arc_opa(obj, (lv_opa_t)v, LV_PART_MAIN); }
 static void exec_scale(void * obj, int32_t v) { lv_obj_set_style_transform_scale(obj, v, 0); }
 static void exec_y(void * obj, int32_t v) { lv_obj_set_y(obj, v); }
-void ui_exec_rotation(void * obj, int32_t v) { lv_image_set_rotation(obj, v); }
 
 /* v: 0..1000 -> slightly wider and shorter, like breathing */
 static void exec_breathe(void * obj, int32_t v)
@@ -163,42 +162,104 @@ static int32_t gap_deg(void) { return ui.theme->style == BRUSHY_STYLE_BLOCKY ? 2
 static int32_t seg_start(int z) { return 180 + z * 90 + gap_deg(); }
 static int32_t seg_span(void) { return 90 - 2 * gap_deg(); }
 
-static lv_obj_t * ring_arc(int32_t start, int32_t end, uint32_t color, lv_opa_t opa)
+/* The ring is one object that draws its arcs itself. LVGL draws an arc by masking every pixel
+ * of its 448 px square, so as separate lv_arc widgets the arcs made every redraw anywhere on
+ * screen expensive, and restyling one (the pulse) redrew the whole screen. Here, areas inside
+ * the ring skip the arcs, and changes only redraw the stretch of ring they affect. */
+
+/* Screen position of the ring's top-left corner (the stage moves when it shakes) */
+static lv_point_t ring_origin(void)
 {
-    bool rounded = ui.theme->style == BRUSHY_STYLE_ROUND;
-    lv_obj_t * arc = lv_arc_create(ui.stage);
-    lv_obj_remove_style_all(arc);
-    lv_obj_remove_flag(arc, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(arc, RING_DIAM, RING_DIAM);
-    lv_obj_center(arc);
-    lv_arc_set_rotation(arc, 0);
-    lv_arc_set_bg_angles(arc, start % 360, end % 360);
-    lv_arc_set_angles(arc, start % 360, start % 360);
-    for(int part = 0; part < 2; part++) {
-        lv_style_selector_t sel = part ? LV_PART_INDICATOR : LV_PART_MAIN;
-        lv_obj_set_style_arc_width(arc, RING_WIDTH, sel);
-        lv_obj_set_style_arc_rounded(arc, rounded, sel);
-    }
-    lv_obj_set_style_arc_color(arc, lv_color_hex(color), LV_PART_MAIN);
-    lv_obj_set_style_arc_opa(arc, opa, LV_PART_MAIN);
-    lv_obj_set_style_arc_opa(arc, LV_OPA_TRANSP, LV_PART_INDICATOR);
-    return arc;
+    lv_area_t c;
+    lv_obj_get_coords(ui.ring, &c);
+    return (lv_point_t){c.x1, c.y1};
 }
 
-static void build_ring(void)
+/* True if `a` (relative to the ring) overlaps the band between its inner and outer edges */
+static bool ring_band_overlaps(const lv_area_t * a)
 {
+    int32_t near_x = LV_CLAMP(a->x1, CENTER, a->x2) - CENTER, near_y = LV_CLAMP(a->y1, CENTER, a->y2) - CENTER;
+    int32_t far_x = LV_MAX(LV_ABS(a->x1 - CENTER), LV_ABS(a->x2 - CENTER));
+    int32_t far_y = LV_MAX(LV_ABS(a->y1 - CENTER), LV_ABS(a->y2 - CENTER));
+    int32_t r_in = RING_RADIUS - RING_WIDTH - 1, r_out = RING_RADIUS + 1;
+    return near_x * near_x + near_y * near_y <= r_out * r_out && far_x * far_x + far_y * far_y >= r_in * r_in;
+}
+
+static void draw_ring_arc(lv_layer_t * layer, int32_t start, int32_t end, lv_color_t color, lv_opa_t opa)
+{
+    lv_point_t o = ring_origin();
+    lv_draw_arc_dsc_t dsc;
+    lv_draw_arc_dsc_init(&dsc);
+    dsc.center.x = o.x + CENTER;
+    dsc.center.y = o.y + CENTER;
+    dsc.radius = RING_RADIUS;
+    dsc.width = RING_WIDTH;
+    dsc.rounded = ui.theme->style == BRUSHY_STYLE_ROUND;
+    dsc.start_angle = start % 360;
+    dsc.end_angle = end % 360;
+    dsc.color = color;
+    dsc.opa = opa;
+    lv_draw_arc(layer, &dsc);
+}
+
+static void ring_draw_cb(lv_event_t * e)
+{
+    lv_layer_t * layer = lv_event_get_layer(e);
+    lv_point_t o = ring_origin();
+    lv_area_t clip = layer->_clip_area;
+    lv_area_move(&clip, -o.x, -o.y);
+    if(!ring_band_overlaps(&clip)) return;
+
     for(int z = 0; z < ZONES; z++) {
-        ui.arcs[z] = ring_arc(seg_start(z), seg_start(z) + seg_span(), 0xffffff, 25);
-        lv_obj_set_style_arc_color(ui.arcs[z], lv_color_hex(ui.theme->ring[z]), LV_PART_INDICATOR);
+        int32_t start = seg_start(z);
+        draw_ring_arc(layer, start, start + seg_span(), lv_color_white(), ui.ring_track_opa[z]);
+        if(ui.ring_fill[z] > 0) {
+            draw_ring_arc(layer, start, start + ui.ring_fill[z], lv_color_hex(ui.theme->ring[z]), LV_OPA_COVER);
+        }
     }
     if(ui.theme->style == BRUSHY_STYLE_BLOCKY) {
         /* Black notches cut each zone into blocks, like the XP bar */
         for(int z = 0; z < ZONES; z++) {
             for(int k = 1; k < BLOCKS_PER_ZONE; k++) {
                 int32_t a = seg_start(z) + k * seg_span() / BLOCKS_PER_ZONE;
-                ring_arc(a, a + 1, 0x000000, LV_OPA_COVER);
+                draw_ring_arc(layer, a, a + 1, lv_color_black(), LV_OPA_COVER);
             }
         }
+    }
+}
+
+/* Redraws the ring between angles `from` and `to` (degrees), in pieces of 10 degrees or less
+ * so that only the band is redrawn, not the square around it */
+static void ring_invalidate(int32_t from, int32_t to)
+{
+    const int32_t r = RING_RADIUS - RING_WIDTH / 2, pad = RING_WIDTH / 2 + 2; /* + rounded caps */
+    lv_point_t o = ring_origin();
+    for(int32_t a = from; a < to; a += 10) {
+        int32_t b = LV_MIN(a + 10, to);
+        lv_area_t area = {INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN};
+        const int32_t degs[3] = {a, (a + b) / 2, b};
+        for(int i = 0; i < 3; i++) {
+            int32_t deg = degs[i];
+            int32_t x = CENTER + lv_trigo_cos(deg) * r / LV_TRIGO_SIN_MAX;
+            int32_t y = CENTER + lv_trigo_sin(deg) * r / LV_TRIGO_SIN_MAX;
+            area.x1 = LV_MIN(area.x1, x - pad);
+            area.y1 = LV_MIN(area.y1, y - pad);
+            area.x2 = LV_MAX(area.x2, x + pad);
+            area.y2 = LV_MAX(area.y2, y + pad);
+        }
+        lv_area_move(&area, o.x, o.y);
+        lv_obj_invalidate_area(ui.ring, &area);
+    }
+}
+
+static void build_ring(void)
+{
+    ui.ring = ui_plain_obj(ui.stage);
+    lv_obj_set_size(ui.ring, SCREEN_SIZE, SCREEN_SIZE);
+    lv_obj_add_event_cb(ui.ring, ring_draw_cb, LV_EVENT_DRAW_MAIN, NULL);
+    for(int z = 0; z < ZONES; z++) {
+        ui.ring_fill[z] = 0;
+        ui.ring_track_opa[z] = TRACK_OPA;
     }
 }
 
@@ -208,9 +269,11 @@ static void set_ring_progress(float t_ms)
     for(int z = 0; z < ZONES; z++) {
         float p = (t_ms - z * zone_ms) / zone_ms;
         p = p < 0 ? 0 : (p > 1 ? 1 : p);
+        int32_t fill = (int32_t)(p * seg_span());
+        if(fill == ui.ring_fill[z]) continue;
         int32_t start = seg_start(z);
-        lv_arc_set_angles(ui.arcs[z], start % 360, (start + (int32_t)(p * seg_span())) % 360);
-        lv_obj_set_style_arc_opa(ui.arcs[z], p > 0 ? LV_OPA_COVER : LV_OPA_TRANSP, LV_PART_INDICATOR);
+        ring_invalidate(start + LV_MIN(fill, ui.ring_fill[z]), start + LV_MAX(fill, ui.ring_fill[z]) + 1);
+        ui.ring_fill[z] = fill;
     }
 }
 
@@ -246,29 +309,68 @@ static void render_clock(float t_ms)
     clock_color(lv_color_hex(ui.theme->ring[ui.zone < 0 ? 0 : ui.zone]));
 }
 
+static void set_track_opa(int zone, lv_opa_t opa)
+{
+    if(opa == ui.ring_track_opa[zone]) return;
+    ui.ring_track_opa[zone] = opa;
+    ring_invalidate(seg_start(zone), seg_start(zone) + seg_span());
+}
+
+/* The active zone's track pulses; the animation's var is the zone's ring_track_opa entry */
+static void exec_track_pulse(void * var, int32_t v)
+{
+    set_track_opa((int)((lv_opa_t *)var - ui.ring_track_opa), (lv_opa_t)v);
+}
+
 static void set_active_zone(int zone)
 {
     for(int z = 0; z < ZONES; z++) {
-        lv_anim_delete(ui.arcs[z], exec_arc_opa);
-        lv_obj_set_style_arc_opa(ui.arcs[z], 25, LV_PART_MAIN);
-        if(z == zone) ui_anim_loop(ui.arcs[z], exec_arc_opa, 25, 90, 900, 0);
+        lv_anim_delete(&ui.ring_track_opa[z], exec_track_pulse);
+        set_track_opa(z, TRACK_OPA);
+        if(z == zone) ui_anim_loop(&ui.ring_track_opa[z], exec_track_pulse, TRACK_OPA, 90, 900, 0);
     }
     if(zone >= 0) clock_color(lv_color_hex(ui.theme->ring[zone]));
 }
 
 /* ---------- Buddy ---------- */
 
+/* Shows the current pose, tilted by the brushing sway if it has pre-rotated frames */
+static void show_pose(void)
+{
+    if(ui.pose >= BRUSHY_POSE_COUNT) return;
+    const lv_image_dsc_t * src = ui.theme->poses[ui.pose];
+    if(ui.sway_tilt >= 0 && (ui.pose == BRUSHY_POSE_BRUSH_A || ui.pose == BRUSHY_POSE_BRUSH_B)) {
+        src = ui.theme->brush_sway[ui.pose - BRUSHY_POSE_BRUSH_A][ui.sway_tilt];
+    }
+    if(lv_image_get_src(ui.character) != src) lv_image_set_src(ui.character, src);
+}
+
 static void set_pose(brushy_pose_t pose)
 {
     if(pose == ui.pose || !ui.theme->poses[pose]) return;
     ui.pose = pose;
-    lv_image_set_src(ui.character, ui.theme->poses[pose]);
+    show_pose();
+}
+
+/* v: -20..20 (0.1 degree) -> the nearest pre-rotated brushing frame */
+static void exec_sway(void * obj, int32_t v)
+{
+    LV_UNUSED(obj);
+    ui.sway_tilt = (int8_t)LV_CLAMP(0, (v + 20 + 5) / 10, BRUSHY_SWAY_TILTS - 1);
+    show_pose();
+}
+
+void ui_stop_mood_motion(void)
+{
+    lv_anim_delete(ui.character, NULL);
+    lv_obj_set_style_translate_y(ui.character, 0, 0);
+    ui.sway_tilt = -1;
+    show_pose();
 }
 
 void ui_start_mood_motion(mood_t mood)
 {
-    lv_anim_delete(ui.character, NULL);
-    lv_obj_set_style_translate_y(ui.character, 0, 0);
+    ui_stop_mood_motion();
     lv_image_set_rotation(ui.character, 0);
     lv_image_set_scale(ui.character, 256);
 
@@ -282,7 +384,7 @@ void ui_start_mood_motion(mood_t mood)
             else ui_anim_loop(ui.character, exec_breathe, 0, 1000, 1600, 0);
             break;
         case MOOD_BRUSHING:
-            if(!blocky) ui_anim_loop(ui.character, ui_exec_rotation, -20, 20, 560, 0); /* pixel art stays upright */
+            if(ui.theme->brush_sway[0][0]) ui_anim_loop(ui.character, exec_sway, -20, 20, 560, 0); /* pixel art stays upright */
             break;
         case MOOD_CHEER:
             ui_anim_loop(ui.character, exec_translate_y, 0, blocky ? -16 : -20, 350, 0);

@@ -109,9 +109,18 @@ void fx_shake(void)
 
 /* ---------- Germs ---------- */
 
+/* v: -100..100 (0.1 degree) -> the nearest pre-rotated frame; the image's user data is its germ */
+static void exec_germ_tilt(void * img, int32_t v)
+{
+    const germ_t * g = lv_obj_get_user_data(img);
+    int32_t i = LV_CLAMP(0, (v + 100 + 12) / 25, BRUSHY_GERM_TILTS - 1);
+    const lv_image_dsc_t * src = ui.theme->germ_tilts[g->kind][i];
+    if(lv_image_get_src(img) != src) lv_image_set_src(img, src);
+}
+
 static void germ_wobble(germ_t * g)
 {
-    ui_anim_loop(g->img, ui_exec_rotation, -100, 100, 1400, (uint32_t)((g - ui.germs) * 230 % 1400));
+    ui_anim_loop(g->img, exec_germ_tilt, -100, 100, 1400, (uint32_t)((g - ui.germs) * 230 % 1400));
 }
 
 void fx_build_germs(void)
@@ -126,6 +135,7 @@ void fx_build_germs(void)
             g->cx = (int32_t)(CENTER + GERM_RADIUS * cosf(rad));
             g->cy = (int32_t)(CENTER + GERM_RADIUS * sinf(rad));
             g->img = ui_image(ui.stage, ui.theme->germs[g->kind]);
+            lv_obj_set_user_data(g->img, g);
             lv_image_set_pivot(g->img, GERM_SIZE / 2, GERM_SIZE / 2);
             lv_obj_set_pos(g->img, g->cx - GERM_SIZE / 2, g->cy - GERM_SIZE / 2);
             lv_obj_set_style_image_recolor(g->img, lv_color_white(), 0); /* for the creeper flash */

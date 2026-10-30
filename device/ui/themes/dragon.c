@@ -22,6 +22,7 @@ const brushy_theme_t brushy_theme_dragon = {
         {0xff9f43, 0x1b1426, 0x5dd94a},
     },
     BRUSHY_THEME_IMAGES(dragon),
+    .brush_sway = {BRUSHY_SWAY_FRAMES(dragon, brush_a), BRUSHY_SWAY_FRAMES(dragon, brush_b)},
     .poses[BRUSHY_POSE_SPIT] = &img_dragon_spit,
     .poses[BRUSHY_POSE_FLY_A] = &img_dragon_fly_a,
     .poses[BRUSHY_POSE_FLY_B] = &img_dragon_fly_b,

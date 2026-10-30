@@ -9,3 +9,5 @@ managed_components/
 device/esp32/sdkconfig
 # reference drawings, not part of the project
 inspiration/
+# benchmark build (sdkconfig.bench)
+device/esp32/build_bench/

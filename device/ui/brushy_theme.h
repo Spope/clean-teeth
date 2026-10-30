@@ -40,6 +40,10 @@ typedef enum {
     BRUSHY_POP_VENOM,    /**< the buddy spits venom at each germ */
 } brushy_pop_t;
 
+/** Pre-rotated frames (tools/png2lvgl.py TILTS), so the device swaps images instead of rotating */
+#define BRUSHY_GERM_TILTS 9 /**< germ wobble: -10 to +10 degrees in 2.5 degree steps */
+#define BRUSHY_SWAY_TILTS 5 /**< brushing sway: -2 to +2 degrees in 1 degree steps */
+
 /** Theme-only tricks (start screen and while brushing) */
 #define BRUSHY_TRICK_MINE    (1u << 0)
 #define BRUSHY_TRICK_RAINBOW (1u << 1)
@@ -63,6 +67,8 @@ typedef struct {
     const lv_image_dsc_t * poses[BRUSHY_POSE_COUNT]; /**< NULL when the theme doesn't need it */
     const lv_image_dsc_t * germs[4];
     const lv_image_dsc_t * germs_scared[4];
+    const lv_image_dsc_t * germ_tilts[4][BRUSHY_GERM_TILTS];        /**< germs[i] tilted */
+    const lv_image_dsc_t * brush_sway[2][BRUSHY_SWAY_TILTS];        /**< BRUSH_A/B tilted; NULL = no sway */
     const lv_image_dsc_t * reward;
     const lv_image_dsc_t * bravo;
     const lv_image_dsc_t * clock_digits[11]; /**< big countdown 0-9 and ":" (A8, tinted) */
@@ -72,6 +78,16 @@ typedef struct {
     const lv_image_dsc_t * xp_orb;        /**< xp trick */
     const lv_image_dsc_t * venom;         /**< BRUSHY_POP_VENOM */
 } brushy_theme_t;
+
+#define BRUSHY_GERM_TILT_FRAMES(t, n) \
+    {&img_##t##_germ_##n##_tilt_0, &img_##t##_germ_##n##_tilt_1, &img_##t##_germ_##n##_tilt_2, \
+     &img_##t##_germ_##n##_tilt_3, &img_##t##_germ_##n, &img_##t##_germ_##n##_tilt_5, \
+     &img_##t##_germ_##n##_tilt_6, &img_##t##_germ_##n##_tilt_7, &img_##t##_germ_##n##_tilt_8}
+
+/** For themes whose buddy sways while brushing (needs a TILTS entry in tools/png2lvgl.py) */
+#define BRUSHY_SWAY_FRAMES(t, pose) \
+    {&img_##t##_##pose##_tilt_0, &img_##t##_##pose##_tilt_1, &img_##t##_##pose, \
+     &img_##t##_##pose##_tilt_3, &img_##t##_##pose##_tilt_4}
 
 /** Fills in the images every theme has, from the asset naming scheme (<id>_idle, ...). */
 #define BRUSHY_THEME_IMAGES(t) \
@@ -85,6 +101,8 @@ typedef struct {
     .germs = {&img_##t##_germ_0, &img_##t##_germ_1, &img_##t##_germ_2, &img_##t##_germ_3}, \
     .germs_scared = {&img_##t##_germ_scared_0, &img_##t##_germ_scared_1, \
                      &img_##t##_germ_scared_2, &img_##t##_germ_scared_3}, \
+    .germ_tilts = {BRUSHY_GERM_TILT_FRAMES(t, 0), BRUSHY_GERM_TILT_FRAMES(t, 1), \
+                   BRUSHY_GERM_TILT_FRAMES(t, 2), BRUSHY_GERM_TILT_FRAMES(t, 3)}, \
     .reward = &img_##t##_reward, \
     .bravo = &img_##t##_bravo, \
     .clock_digits = {&img_##t##_clock_digit_0, &img_##t##_clock_digit_1, &img_##t##_clock_digit_2, \

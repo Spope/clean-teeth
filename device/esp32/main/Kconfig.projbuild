@@ -1,0 +1,8 @@
+menu "Brushy Buddy"
+    config BRUSHY_BENCH
+        bool "Benchmark: play every scene and trick in turn, logging the frame rate"
+        default n
+        depends on LV_USE_PERF_MONITOR_LOG_MODE
+        help
+            Build with sdkconfig.bench (see the README) instead of turning this on by hand.
+endmenu

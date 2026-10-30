@@ -347,9 +347,8 @@ bool tricks_start(trick_t kind)
         default: return false;
     }
 
-    lv_anim_delete(ui.character, NULL); /* the trick owns the buddy's movement meanwhile */
+    ui_stop_mood_motion(); /* the trick owns the buddy's movement meanwhile */
     lv_anim_delete(&ui.giggle_token, NULL);
-    lv_obj_set_style_translate_y(ui.character, 0, 0);
     ui_clear_pose_override();
     ui.flying = kind == TRICK_FLY;
     tr.active = true;

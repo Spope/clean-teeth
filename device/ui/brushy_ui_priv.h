@@ -50,7 +50,9 @@ typedef struct {
     lv_obj_t * screen;
     lv_obj_t * stage; /* holds everything, so the whole picture can shake */
     lv_obj_t * character;
-    lv_obj_t * arcs[ZONES];
+    lv_obj_t * ring;              /* the 4 zone arcs, drawn by ring_draw_cb */
+    int32_t ring_fill[ZONES];     /* degrees filled in each zone */
+    lv_opa_t ring_track_opa[ZONES];
     lv_obj_t * clock;     /* big faint countdown above the buddy */
     int32_t clock_secs;   /* seconds shown, -1 = none */
     germ_t germs[GERM_COUNT];
@@ -60,6 +62,7 @@ typedef struct {
     phase_t phase;
     mood_t mood;
     brushy_pose_t pose;
+    int8_t sway_tilt;             /* brushing sway: index into theme->brush_sway, -1 = upright */
     brushy_pose_t pose_override; /* BRUSHY_POSE_COUNT = none */
     uint32_t pose_override_until; /* 0 = until cleared */
     bool flying;                  /* flap between FLY_A and FLY_B */
@@ -83,7 +86,7 @@ void ui_play_melody(const brushy_note_t * notes, uint32_t count); /* in the them
 lv_obj_t * ui_image(lv_obj_t * parent, const lv_image_dsc_t * src);
 lv_obj_t * ui_plain_obj(lv_obj_t * parent);
 void ui_anim_loop(void * var, lv_anim_exec_xcb_t cb, int32_t from, int32_t to, uint32_t ms, uint32_t delay);
-void ui_exec_rotation(void * obj, int32_t v);
+void ui_stop_mood_motion(void);
 void ui_start_mood_motion(mood_t mood);
 void ui_set_mood(mood_t mood);
 void ui_override_pose(brushy_pose_t pose, uint32_t ms); /* ms = 0: until cleared */
