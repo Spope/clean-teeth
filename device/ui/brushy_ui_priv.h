@@ -63,6 +63,10 @@ typedef struct {
     mood_t mood;
     brushy_pose_t pose;
     int8_t sway_tilt;             /* brushing sway: index into theme->brush_sway, -1 = upright */
+    int32_t buddy_x, buddy_y;     /* set by tricks: offset from the buddy's place, */
+    uint32_t buddy_scale;         /* scale (256 = 1x) */
+    int32_t buddy_rot;            /* and rotation (0.1 degree) around the feet */
+    bool peeking;                 /* showing a pre-zoomed peek-a-boo frame */
     brushy_pose_t pose_override; /* BRUSHY_POSE_COUNT = none */
     uint32_t pose_override_until; /* 0 = until cleared */
     bool flying;                  /* flap between FLY_A and FLY_B */
@@ -86,6 +90,7 @@ void ui_play_melody(const brushy_note_t * notes, uint32_t count); /* in the them
 lv_obj_t * ui_image(lv_obj_t * parent, const lv_image_dsc_t * src);
 lv_obj_t * ui_plain_obj(lv_obj_t * parent);
 void ui_anim_loop(void * var, lv_anim_exec_xcb_t cb, int32_t from, int32_t to, uint32_t ms, uint32_t delay);
+void ui_place_buddy(int32_t x, int32_t y, uint32_t scale, int32_t rot);
 void ui_stop_mood_motion(void);
 void ui_start_mood_motion(mood_t mood);
 void ui_set_mood(mood_t mood);

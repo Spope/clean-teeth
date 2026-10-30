@@ -27,14 +27,18 @@ static const struct { const char * theme, * what; } bench_steps[] = {
 static void bench_step(lv_timer_t * t)
 {
     static uint32_t i;
-    const char * theme = bench_steps[i].theme, * what = bench_steps[i].what;
+    const uint32_t n = sizeof(bench_steps) / sizeof(bench_steps[0]);
+    const char * theme, * what;
+    do { /* skip the steps of themes that aren't built in */
+        theme = bench_steps[i].theme;
+        what = bench_steps[i].what;
+        i = (i + 1) % n;
+    } while(!brushy_ui_set_theme(theme));
     ESP_LOGI(TAG, "bench: %s %s", theme, what);
-    brushy_ui_set_theme(theme);
     if(strcmp(what, "idle") == 0 || strcmp(what, "sleepy") == 0 || strcmp(what, "brushing") == 0) {
         brushy_ui_preview(what, 20);
     }
     else brushy_ui_trick(what);
-    i = (i + 1) % (sizeof(bench_steps) / sizeof(bench_steps[0]));
 }
 #endif
 
@@ -47,6 +51,7 @@ void app_main(void)
     hal_esp32_init();
 
     bsp_display_lock(-1); /* LVGL runs in the adapter's task: take its lock for any lv_ call */
+    bsp_display_brightness_set(CONFIG_BRUSHY_BRIGHTNESS); /* same bus as the frames, so under the lock too */
     brushy_ui_create(lv_screen_active());
     brushy_ui_battery(hal_esp32_battery_percent());
 #if CONFIG_BRUSHY_BENCH

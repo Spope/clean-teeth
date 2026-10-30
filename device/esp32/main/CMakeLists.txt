@@ -10,14 +10,16 @@ idf_component_register(
         ${UI_DIR}/brushy_tricks.c
         ${UI_DIR}/brushy_synth.c
         ${UI_DIR}/themes/themes.c
-        ${UI_DIR}/themes/minecraft.c
-        ${UI_DIR}/themes/dragon.c
+        ${UI_DIR}/themes/${CONFIG_BRUSHY_THEME}.c
     INCLUDE_DIRS . ${UI_DIR}
     PRIV_REQUIRES nvs_flash esp_psram esp_driver_i2c)
 
-# Images: assets/png/*.png -> LVGL C arrays (kept in flash), regenerated when a PNG changes
+# One theme per device (menuconfig: Brushy Buddy > Theme): its code and images only
+target_compile_definitions(${COMPONENT_LIB} PRIVATE BRUSHY_THEME=${CONFIG_BRUSHY_THEME})
+
+# Images: assets/png/<theme>_*.png -> LVGL C arrays (kept in flash), regenerated when a PNG changes
 idf_build_get_property(python PYTHON)
-file(GLOB ASSET_PNGS CONFIGURE_DEPENDS ${REPO_ROOT}/assets/png/*.png)
+file(GLOB ASSET_PNGS CONFIGURE_DEPENDS ${REPO_ROOT}/assets/png/${CONFIG_BRUSHY_THEME}_*.png)
 set(ASSET_DIR ${CMAKE_CURRENT_BINARY_DIR}/assets)
 set(ASSET_SRCS)
 foreach(png ${ASSET_PNGS})

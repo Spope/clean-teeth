@@ -3,7 +3,8 @@
 A cute 2-minute tooth-brushing timer for a small round screen
 ([Waveshare ESP32-S3 Touch AMOLED 1.75"](https://www.waveshare.com/esp32-s3-touch-amoled-1.75.htm), 466×466).
 
-Two themes, switched by **pressing and holding** the start screen:
+Two themes, switched by **pressing and holding** the start screen (in the browser prototype
+and the simulator; each device is built with one of them):
 
 - **Minecraft**: Steve, mob heads as germs (creeper, zombie, slime, spider),
   diamonds as rewards, a blocky XP-bar ring, chiptune sounds.
@@ -39,8 +40,8 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 - Tapping during brushing makes the buddy giggle.
 - At the end: confetti, "Bravo !", and the reward drop.
 - After 30 s without a tap, the buddy falls asleep.
-- Every 8-15 s while awake, the buddy plays a trick:
-  - on the start screen and while brushing: **peek-a-boo** (ducks out, pops up big and close
+- Every 8-15 s while brushing, the buddy plays a trick (never on the start screen):
+  - **peek-a-boo** (ducks out, pops up big and close
     from the bottom edge, comes back), **peek from the side** (leans in from an edge to spy,
     twice), **slide** (walks off one side, hops across the whole screen, walks back in),
     and Steve's Minecraft tricks: **mining** (a grass block appears, he breaks it in three
@@ -182,39 +183,53 @@ rendered by an audio task and played through the speaker, settings go to NVS.
 
 Needs ESP-IDF 5.5 with the ESP32-S3 toolchain (`~/esp/esp-idf/install.sh esp32s3`, once).
 
+Each device has one theme, and only its artwork goes into the firmware. Build each in its
+own folder (the first build downloads the components):
+
 ```sh
 . ~/esp/esp-idf/export.sh
 cd device/esp32
-idf.py build                                     # first build downloads the components
-idf.py -p /dev/cu.usbmodem* flash monitor        # Ctrl-] quits the monitor
+idf.py -B build_minecraft -D SDKCONFIG=build_minecraft/sdkconfig \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.minecraft" -p /dev/cu.usbmodem* flash monitor
+idf.py -B build_dragon -D SDKCONFIG=build_dragon/sdkconfig \
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.dragon" -p /dev/cu.usbmodem* flash monitor
 ```
+
+Ctrl-] quits the monitor. Plain `idf.py build` builds the Minecraft theme (`idf.py menuconfig`,
+Brushy Buddy > Theme, to change it). The settings are read from `sdkconfig.defaults` only
+when the build's `sdkconfig` is created: delete it after changing them.
 
 If flashing fails to connect, unplug USB, hold BOOT while plugging it back in, and try again.
 
-Memory: the artwork (about 8 MB) is linked into the app and read straight from flash;
-LVGL's heap and the draw buffers are in the 8 MB PSRAM.
+Memory: the artwork (about 5 MB for the dragon, 3 MB for Minecraft) is linked into the app
+and read straight from flash; LVGL's heap, the draw buffers and the image cache are in the
+8 MB PSRAM.
 
 ### Frame rate
 
 LVGL draws in software, and rotating or scaling an image costs the ESP32-S3 several
 milliseconds per image and frame. So what moves all the time avoids it: the germ wobble
 and Glory's brushing sway swap between pre-rotated frames (`TILTS` in `tools/png2lvgl.py`),
-and the ring draws its arcs only where the redrawn area touches it (`ring_draw_cb`).
+and the ring draws each arc only where the redrawn area touches it (`ring_draw_cb`).
+
+The peek-a-boo zooms the buddy to 1.9x: rather than scaling him, it shows the pose already
+drawn at that size and tilt (`*_peek` images, `PEEK` in `tools/png2lvgl.py`). These 12 frames
+are LZ4-compressed in flash (0.6 MB instead of 4.3 MB for the dragon) and decompressed into
+LVGL's image cache when the theme loads, about 30 ms each.
 
 To measure, build the benchmark: it plays every scene and trick in turn and logs the
 frame rate and render time every few hundred ms.
 
 ```sh
 idf.py -B build_bench -D SDKCONFIG=build_bench/sdkconfig \
-  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.bench" -p /dev/cu.usbmodem* flash monitor
+  -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.dragon;sdkconfig.bench" -p /dev/cu.usbmodem* flash monitor
 ```
 
 ### Still to do
 
 - Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`), and the
   low battery warning with a battery plugged in (the boot log prints `battery NN%`).
-- Frame rate of the tricks that zoom or rotate the whole buddy (peek-a-boo, peek from the
-  side, slide, mining, flying: down to 5-15 FPS at their biggest moments) and of Glory's
-  sleepy breathing (30-50 FPS).
+- Frame rate of the tricks that rotate the whole buddy (slide, mining, flying: down to
+  13-16 FPS at their biggest moments) and of Glory's sleepy breathing (40-50 FPS).
 - Power: dim or switch off the screen while the buddy sleeps, and power off after a while
   on battery (the AXP2101 PMU and the PWR button).

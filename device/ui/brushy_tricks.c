@@ -8,8 +8,8 @@
  *   xp         Minecraft: XP orbs appear around the ring and zip into Steve, who levels up
  *   rainbow    dragon: scales cycle through the rainbow while hopping
  *   fly        dragon: take off, fly across the top of the screen, glide back
- * All tricks play on the start screen and during brushing (rainbow and fly briefly put the
- * toothbrush away).
+ * Tricks only play by themselves during brushing (rainbow and fly briefly put the toothbrush
+ * away); the start screen stays calm.
  */
 #include "brushy_ui_priv.h"
 
@@ -75,13 +75,13 @@ static void add_event(uint16_t ms, uint8_t code) { if(tr.n_events < MAX_EVENTS) 
 /* side: -1 left, 0 middle, 1 right (leaning in) */
 static void build_peek(int side)
 {
-    int x = side * 90, r = -side * 15;
+    int x = side * 90, r = -side * BRUSHY_PEEK_TILT;
     add_frame(FRAME(0, 0, 0, 1, 0, EASE_IN));
     add_frame(FRAME(350, 0, 400, 1, 0, EASE_LINEAR));
-    add_frame(FRAME(360, x, 700, 1.9f, r, EASE_BACK));
-    add_frame(FRAME(850, x, 287, 1.9f, r, EASE_LINEAR));
-    add_frame(FRAME(2000, x, 287, 1.9f, r, EASE_IN));
-    add_frame(FRAME(2400, x, 700, 1.9f, r, EASE_LINEAR));
+    add_frame(FRAME(360, x, 700, BRUSHY_PEEK_ZOOM, r, EASE_BACK));
+    add_frame(FRAME(850, x, 287, BRUSHY_PEEK_ZOOM, r, EASE_LINEAR));
+    add_frame(FRAME(2000, x, 287, BRUSHY_PEEK_ZOOM, r, EASE_IN));
+    add_frame(FRAME(2400, x, 700, BRUSHY_PEEK_ZOOM, r, EASE_LINEAR));
     add_frame(FRAME(2410, 0, 400, 1, 0, EASE_BACK));
     add_frame(FRAME(2900, 0, 0, 1, 0, EASE_LINEAR));
 }
@@ -162,13 +162,6 @@ static void build_fly(int d)
 }
 
 /* ---------- Running a trick ---------- */
-
-static void place_buddy(int32_t x, int32_t y, uint32_t scale, int32_t rot)
-{
-    lv_obj_align(ui.character, LV_ALIGN_CENTER, x, y);
-    lv_image_set_scale(ui.character, scale);
-    lv_image_set_rotation(ui.character, rot);
-}
 
 static void exec_scale(void * obj, int32_t v) { lv_image_set_scale(obj, (uint32_t)v); }
 
@@ -290,7 +283,7 @@ static void exec_trick(void * var, int32_t t)
     LV_UNUSED(var);
     int32_t v[4];
     ui_keyframes(tr.frames, tr.n_frames, t, 0, v);
-    place_buddy(v[0], v[1], (uint32_t)v[2], v[3]);
+    ui_place_buddy(v[0], v[1], (uint32_t)v[2], v[3]);
     trick_pose(t);
     while(tr.next_event < tr.n_events && tr.events[tr.next_event].ms <= t) handle_event(tr.events[tr.next_event++].code);
 }
@@ -306,7 +299,7 @@ static void cleanup(void)
     }
     tr.n_orbs = 0;
     ui_clear_pose_override();
-    place_buddy(0, 0, 256, 0);
+    ui_place_buddy(0, 0, 256, 0);
 }
 
 static void trick_done_cb(lv_anim_t * a)
@@ -387,8 +380,7 @@ void tricks_schedule(void)
 void tricks_update(uint32_t now)
 {
     if(tr.active || (int32_t)(now - tr.next_at) < 0) return;
-    bool idle = ui.phase == PHASE_IDLE && ui.mood == MOOD_IDLE;
-    if(!(idle || ui.phase == PHASE_BRUSHING) || ui.pose_override != BRUSHY_POSE_COUNT) return;
+    if(ui.phase != PHASE_BRUSHING || ui.pose_override != BRUSHY_POSE_COUNT) return;
 
     trick_t pool[TRICK_COUNT];
     int n = 0;

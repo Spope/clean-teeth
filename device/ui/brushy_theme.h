@@ -44,6 +44,13 @@ typedef enum {
 #define BRUSHY_GERM_TILTS 9 /**< germ wobble: -10 to +10 degrees in 2.5 degree steps */
 #define BRUSHY_SWAY_TILTS 5 /**< brushing sway: -2 to +2 degrees in 1 degree steps */
 
+/** Peek-a-boo: the buddy pops up this big, tilted by -BRUSHY_PEEK_TILT, 0 or +BRUSHY_PEEK_TILT
+ *  degrees. Pre-zoomed frames for the poses it can show (tools/export_assets.sh renders them,
+ *  tools/png2lvgl.py tilts them), so the device doesn't scale and rotate the buddy. */
+#define BRUSHY_PEEK_ZOOM  1.9f
+#define BRUSHY_PEEK_TILT  15
+#define BRUSHY_PEEK_TILTS 3
+
 /** Theme-only tricks (start screen and while brushing) */
 #define BRUSHY_TRICK_MINE    (1u << 0)
 #define BRUSHY_TRICK_RAINBOW (1u << 1)
@@ -69,6 +76,8 @@ typedef struct {
     const lv_image_dsc_t * germs_scared[4];
     const lv_image_dsc_t * germ_tilts[4][BRUSHY_GERM_TILTS];        /**< germs[i] tilted */
     const lv_image_dsc_t * brush_sway[2][BRUSHY_SWAY_TILTS];        /**< BRUSH_A/B tilted; NULL = no sway */
+    const lv_image_dsc_t * peek[BRUSHY_POSE_COUNT][BRUSHY_PEEK_TILTS]; /**< zoomed and tilted; NULL = none */
+    const lv_point_t * peek_feet[BRUSHY_POSE_COUNT][BRUSHY_PEEK_TILTS]; /**< where the feet are in peek[][] */
     const lv_image_dsc_t * reward;
     const lv_image_dsc_t * bravo;
     const lv_image_dsc_t * clock_digits[11]; /**< big countdown 0-9 and ":" (A8, tinted) */
@@ -89,6 +98,11 @@ typedef struct {
     {&img_##t##_##pose##_tilt_0, &img_##t##_##pose##_tilt_1, &img_##t##_##pose, \
      &img_##t##_##pose##_tilt_3, &img_##t##_##pose##_tilt_4}
 
+#define BRUSHY_PEEK_FRAMES(t, pose, POSE) \
+    .peek[BRUSHY_POSE_##POSE] = {&img_##t##_##pose##_peek_0, &img_##t##_##pose##_peek_1, &img_##t##_##pose##_peek_2}, \
+    .peek_feet[BRUSHY_POSE_##POSE] = {&img_##t##_##pose##_peek_0_pivot, &img_##t##_##pose##_peek_1_pivot, \
+                                      &img_##t##_##pose##_peek_2_pivot}
+
 /** Fills in the images every theme has, from the asset naming scheme (<id>_idle, ...). */
 #define BRUSHY_THEME_IMAGES(t) \
     .poses[BRUSHY_POSE_IDLE] = &img_##t##_idle, \
@@ -103,6 +117,8 @@ typedef struct {
                      &img_##t##_germ_scared_2, &img_##t##_germ_scared_3}, \
     .germ_tilts = {BRUSHY_GERM_TILT_FRAMES(t, 0), BRUSHY_GERM_TILT_FRAMES(t, 1), \
                    BRUSHY_GERM_TILT_FRAMES(t, 2), BRUSHY_GERM_TILT_FRAMES(t, 3)}, \
+    BRUSHY_PEEK_FRAMES(t, idle, IDLE), BRUSHY_PEEK_FRAMES(t, blink, BLINK), \
+    BRUSHY_PEEK_FRAMES(t, brush_a, BRUSH_A), BRUSHY_PEEK_FRAMES(t, brush_b, BRUSH_B), \
     .reward = &img_##t##_reward, \
     .bravo = &img_##t##_bravo, \
     .clock_digits = {&img_##t##_clock_digit_0, &img_##t##_clock_digit_1, &img_##t##_clock_digit_2, \

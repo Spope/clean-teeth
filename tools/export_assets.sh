@@ -46,6 +46,11 @@ for t in "${THEMES[@]}"; do
       shot "$w" "$h" "${t}_${name}" "theme=$t&what=sprite&name=$name"
     fi
   done < <(node "$ROOT/tools/theme_assets.js" "$t")
+  # Peek-a-boo: the poses it can show, at its zoom (BRUSHY_PEEK_ZOOM, 1.9 x 250 px);
+  # png2lvgl.py tilts them and keeps the part that reaches the screen
+  for pose in idle blink brush_a brush_b; do
+    shot 475 475 "${t}_${pose}_peek" "theme=$t&what=pose&pose=$pose"
+  done
   for i in 0 1 2 3; do
     shot 52 52 "${t}_germ_$i" "theme=$t&what=germ&i=$i"
     shot 52 52 "${t}_germ_scared_$i" "theme=$t&what=germ&i=$i&scared=1"

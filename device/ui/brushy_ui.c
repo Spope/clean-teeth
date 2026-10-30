@@ -1,14 +1,17 @@
 /**
  * Brushy Buddy UI. Mirrors the behaviour of the browser prototype (prototype/js/app.js):
  *   idle     - buddy waits (falls asleep after 30 s); tap to start,
- *              press and hold to switch theme
+ *              press and hold to switch theme (when built with more than one)
  *   brushing - 2 minutes, 4 zones of 30 s filling the ring clockwise from top-left;
  *              germs are defeated over time (see brushy_fx.c), tap = giggle
  *   done     - cheer, confetti, "Bravo !", the reward drops and is collected;
  *              back to idle on tap or after 12 s
- * While awake, the buddy plays a random trick every 8-15 s (see brushy_tricks.c).
+ * While brushing, the buddy plays a random trick every 8-15 s (see brushy_tricks.c).
  */
 #include "brushy_ui_priv.h"
+
+#include "src/draw/lv_image_decoder_private.h" /* lv_image_decoder_dsc_t, to preload images */
+#include "src/misc/lv_area_private.h"           /* lv_area_intersect */
 
 #include <math.h>
 #include <string.h>
@@ -192,8 +195,34 @@ static bool ring_band_overlaps(const lv_area_t * a)
     return near_x * near_x + near_y * near_y <= r_out * r_out && far_x * far_x + far_y * far_y >= r_in * r_in;
 }
 
+/* Bounding box on screen of the ring between angles `from` and `to` (degrees, at most 90 apart
+ * and not across a multiple of 90, like the zones) */
+static void ring_area(int32_t from, int32_t to, lv_area_t * area)
+{
+    const int32_t r = RING_RADIUS - RING_WIDTH / 2, pad = RING_WIDTH / 2 + 2; /* + rounded caps */
+    lv_point_t o = ring_origin();
+    *area = (lv_area_t){INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN};
+    for(int32_t a = from; ; a = LV_MIN(a + 10, to)) {
+        int32_t x = o.x + CENTER + lv_trigo_cos(a) * r / LV_TRIGO_SIN_MAX;
+        int32_t y = o.y + CENTER + lv_trigo_sin(a) * r / LV_TRIGO_SIN_MAX;
+        area->x1 = LV_MIN(area->x1, x - pad);
+        area->y1 = LV_MIN(area->y1, y - pad);
+        area->x2 = LV_MAX(area->x2, x + pad);
+        area->y2 = LV_MAX(area->y2, y + pad);
+        if(a == to) break;
+    }
+}
+
+/* LVGL masks every pixel of the arc's square that is being redrawn, so the arc is clipped
+ * to its own bounding box first: a 1 degree notch then costs almost nothing */
 static void draw_ring_arc(lv_layer_t * layer, int32_t start, int32_t end, lv_color_t color, lv_opa_t opa)
 {
+    lv_area_t box, clip_saved = layer->_clip_area;
+    ring_area(start, end, &box);
+    if(!lv_area_intersect(&layer->_clip_area, &clip_saved, &box)) {
+        layer->_clip_area = clip_saved;
+        return;
+    }
     lv_point_t o = ring_origin();
     lv_draw_arc_dsc_t dsc;
     lv_draw_arc_dsc_init(&dsc);
@@ -207,6 +236,7 @@ static void draw_ring_arc(lv_layer_t * layer, int32_t start, int32_t end, lv_col
     dsc.color = color;
     dsc.opa = opa;
     lv_draw_arc(layer, &dsc);
+    layer->_clip_area = clip_saved;
 }
 
 static void ring_draw_cb(lv_event_t * e)
@@ -239,22 +269,9 @@ static void ring_draw_cb(lv_event_t * e)
  * so that only the band is redrawn, not the square around it */
 static void ring_invalidate(int32_t from, int32_t to)
 {
-    const int32_t r = RING_RADIUS - RING_WIDTH / 2, pad = RING_WIDTH / 2 + 2; /* + rounded caps */
-    lv_point_t o = ring_origin();
     for(int32_t a = from; a < to; a += 10) {
-        int32_t b = LV_MIN(a + 10, to);
-        lv_area_t area = {INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN};
-        const int32_t degs[3] = {a, (a + b) / 2, b};
-        for(int i = 0; i < 3; i++) {
-            int32_t deg = degs[i];
-            int32_t x = CENTER + lv_trigo_cos(deg) * r / LV_TRIGO_SIN_MAX;
-            int32_t y = CENTER + lv_trigo_sin(deg) * r / LV_TRIGO_SIN_MAX;
-            area.x1 = LV_MIN(area.x1, x - pad);
-            area.y1 = LV_MIN(area.y1, y - pad);
-            area.x2 = LV_MAX(area.x2, x + pad);
-            area.y2 = LV_MAX(area.y2, y + pad);
-        }
-        lv_area_move(&area, o.x, o.y);
+        lv_area_t area;
+        ring_area(a, LV_MIN(a + 10, to), &area);
         lv_obj_invalidate_area(ui.ring, &area);
     }
 }
@@ -341,15 +358,85 @@ static void set_active_zone(int zone)
 
 /* ---------- Buddy ---------- */
 
-/* Shows the current pose, tilted by the brushing sway if it has pre-rotated frames */
+/* Index of the pre-zoomed peek-a-boo frame matching where tricks put the buddy, or -1 */
+static int peek_tilt(void)
+{
+    if(ui.buddy_scale != (uint32_t)(BRUSHY_PEEK_ZOOM * 256)) return -1;
+    for(int i = 0; i < BRUSHY_PEEK_TILTS; i++) {
+        if(ui.buddy_rot == (i - 1) * BRUSHY_PEEK_TILT * 10) return ui.theme->peek[ui.pose][i] ? i : -1;
+    }
+    return -1;
+}
+
+/* Like lv_obj_set_size and lv_obj_align, but only redraws when something changes:
+ * tricks place the buddy on every frame, even while he holds still */
+static void set_box(lv_obj_t * obj, int32_t w, int32_t h, lv_align_t align, int32_t x, int32_t y)
+{
+    if(lv_obj_get_style_width(obj, 0) != w || lv_obj_get_style_height(obj, 0) != h) lv_obj_set_size(obj, w, h);
+    if(lv_obj_get_style_align(obj, 0) != align || lv_obj_get_style_x(obj, 0) != x || lv_obj_get_style_y(obj, 0) != y) {
+        lv_obj_align(obj, align, x, y);
+    }
+}
+
+/* Puts the buddy where tricks asked (ui.buddy_*): a pre-zoomed frame placed by its feet,
+ * or the pose scaled and rotated by LVGL */
+static void place_character(int tilt)
+{
+    if(tilt >= 0) {
+        const lv_image_dsc_t * img = ui.theme->peek[ui.pose][tilt];
+        const lv_point_t * feet = ui.theme->peek_feet[ui.pose][tilt];
+        set_box(ui.character, img->header.w, img->header.h, LV_ALIGN_TOP_LEFT,
+                CENTER + ui.buddy_x - feet->x, CENTER + CHAR_SIZE / 2 + ui.buddy_y - feet->y);
+        lv_image_set_scale(ui.character, 256);
+        lv_image_set_rotation(ui.character, 0);
+    }
+    else {
+        set_box(ui.character, CHAR_SIZE, CHAR_SIZE, LV_ALIGN_CENTER, ui.buddy_x, ui.buddy_y);
+        lv_image_set_scale(ui.character, ui.buddy_scale);
+        lv_image_set_rotation(ui.character, ui.buddy_rot);
+    }
+    ui.peeking = tilt >= 0;
+}
+
+/* Shows the current pose: pre-zoomed while peeking, tilted by the brushing sway if it has
+ * pre-rotated frames */
 static void show_pose(void)
 {
     if(ui.pose >= BRUSHY_POSE_COUNT) return;
+    int tilt = peek_tilt();
     const lv_image_dsc_t * src = ui.theme->poses[ui.pose];
-    if(ui.sway_tilt >= 0 && (ui.pose == BRUSHY_POSE_BRUSH_A || ui.pose == BRUSHY_POSE_BRUSH_B)) {
+    if(tilt >= 0) {
+        src = ui.theme->peek[ui.pose][tilt];
+    }
+    else if(ui.sway_tilt >= 0 && (ui.pose == BRUSHY_POSE_BRUSH_A || ui.pose == BRUSHY_POSE_BRUSH_B)) {
         src = ui.theme->brush_sway[ui.pose - BRUSHY_POSE_BRUSH_A][ui.sway_tilt];
     }
     if(lv_image_get_src(ui.character) != src) lv_image_set_src(ui.character, src);
+    if(ui.peeking || tilt >= 0) place_character(tilt); /* entering, leaving or another frame */
+}
+
+/* Decompresses the peek-a-boo frames now (~30 ms each) rather than when the trick first shows
+ * them: they stay in LVGL's image cache (LV_CACHE_DEF_SIZE must hold them all) */
+static void preload_peek_frames(void)
+{
+    for(int pose = 0; pose < BRUSHY_POSE_COUNT; pose++) {
+        for(int i = 0; i < BRUSHY_PEEK_TILTS; i++) {
+            lv_image_decoder_dsc_t dsc;
+            if(ui.theme->peek[pose][i] && lv_image_decoder_open(&dsc, ui.theme->peek[pose][i], NULL) == LV_RESULT_OK) {
+                lv_image_decoder_close(&dsc);
+            }
+        }
+    }
+}
+
+void ui_place_buddy(int32_t x, int32_t y, uint32_t scale, int32_t rot)
+{
+    ui.buddy_x = x;
+    ui.buddy_y = y;
+    ui.buddy_scale = scale;
+    ui.buddy_rot = rot;
+    show_pose(); /* places the buddy if it shows a peek frame */
+    if(!ui.peeking) place_character(-1);
 }
 
 static void set_pose(brushy_pose_t pose)
@@ -716,6 +803,10 @@ static void load_theme(const brushy_theme_t * theme)
     lv_obj_set_size(ui.character, CHAR_SIZE, CHAR_SIZE);
     lv_obj_center(ui.character);
     lv_image_set_pivot(ui.character, CHAR_SIZE / 2, CHAR_SIZE); /* bottom centre: feet stay planted */
+    ui.buddy_x = ui.buddy_y = ui.buddy_rot = 0;
+    ui.buddy_scale = 256;
+    ui.peeking = false;
+    preload_peek_frames();
     build_overlays();
 
     to_idle();
@@ -728,6 +819,7 @@ static void load_theme(const brushy_theme_t * theme)
 
 static void next_theme(void)
 {
+    if(brushy_theme_count < 2) return; /* a device built for one theme */
     uint32_t i = 0;
     while(i < brushy_theme_count && brushy_themes[i] != ui.theme) i++;
     load_theme(brushy_themes[(i + 1) % brushy_theme_count]);

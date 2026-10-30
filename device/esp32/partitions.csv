@@ -1,5 +1,5 @@
 # Name,   Type, SubType, Offset,  Size, Flags
-# The artwork (about 6 MB) is linked into the app, so the app partition is large.
+# The artwork (up to about 5 MB, one theme) is linked into the app, so the app partition is large.
 nvs,      data, nvs,     0x9000,  0x6000,
 phy_init, data, phy,     0xf000,  0x1000,
 factory,  app,  factory, 0x10000, 12M,

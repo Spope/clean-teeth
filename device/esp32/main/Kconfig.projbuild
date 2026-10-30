@@ -1,4 +1,28 @@
 menu "Brushy Buddy"
+    choice BRUSHY_THEME_CHOICE
+        prompt "Theme"
+        default BRUSHY_THEME_MINECRAFT
+        help
+            The device is built with one theme: only its artwork goes into the firmware.
+        config BRUSHY_THEME_MINECRAFT
+            bool "Minecraft"
+        config BRUSHY_THEME_DRAGON
+            bool "Les Royaumes de feu (dragon)"
+    endchoice
+
+    config BRUSHY_THEME
+        string
+        default "minecraft" if BRUSHY_THEME_MINECRAFT
+        default "dragon" if BRUSHY_THEME_DRAGON
+
+    config BRUSHY_BRIGHTNESS
+        int "Screen brightness (%)"
+        range 1 100
+        default 80
+        help
+            Set once at startup. A build can override it, e.g. CONFIG_BRUSHY_BRIGHTNESS=60
+            in sdkconfig.dragon.
+
     config BRUSHY_BENCH
         bool "Benchmark: play every scene and trick in turn, logging the frame rate"
         default n
