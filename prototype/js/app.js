@@ -10,6 +10,8 @@
     celebrateSeconds: 12,  // done → idle automatically
     longPressMs: 900,      // hold on the start screen to switch theme
     trickEveryMs: [8000, 15000],  // random pause between tricks
+    lowBattery: 25,        // % at boot at or below which the warning shows
+    batteryWarnMs: 5000,
   };
 
   const SIZE = 466;
@@ -676,6 +678,33 @@
     setTimeout(() => { host.innerHTML = ''; }, 4500);
   }
 
+  // ---------- Low battery warning ----------
+  // Shown at boot (device: brushy_ui_battery). Covers the stage: a tap only dismisses it.
+  let batteryTimer = null;
+  function batteryWarning(percent) {
+    if (!(percent >= 0 && percent <= CONFIG.lowBattery)) return;
+    const el = $('battery');
+    $('battery-fill').style.width = `${Math.max(percent, 8)}%`;
+    $('battery-text').textContent = `${percent}%`;
+    el.hidden = false;
+    el.classList.remove('closing');
+    Sound.lowBattery();
+    clearTimeout(batteryTimer);
+    batteryTimer = setTimeout(closeBatteryWarning, CONFIG.batteryWarnMs);
+  }
+  function closeBatteryWarning() {
+    const el = $('battery');
+    if (el.hidden || el.classList.contains('closing')) return;
+    clearTimeout(batteryTimer);
+    el.classList.add('closing');
+    setTimeout(() => { if (el.classList.contains('closing')) el.hidden = true; }, 400);
+  }
+  $('battery').addEventListener('pointerdown', (e) => {
+    e.stopPropagation(); // not a tap on the buddy
+    Sound.unlock();
+    closeBatteryWarning();
+  });
+
   // ---------- Input ----------
   // Start screen: tap to start, press and hold to switch theme.
   let holdTimer = null;
@@ -747,6 +776,7 @@
       state.elapsed = CONFIG.totalSeconds - 3 / state.speed;
     });
     $('dev-stop').addEventListener('click', toIdle);
+    $('dev-battery').addEventListener('click', () => batteryWarning(18));
   }
 
   function playTrick(name) {
@@ -757,7 +787,8 @@
 
   // Jump straight to a state, e.g. index.html?theme=dragon&preview=brushing&t=50&trick=peek
   // (preview = idle | sleepy | brushing | done; trick = peek | peekSide | slide | mine |
-  // rainbow | fly | mirror | shake). Handy for design reviews.
+  // rainbow | fly | mirror | shake; battery = charge at boot, warns at 25 or less).
+  // Handy for design reviews.
   function applyPreview() {
     const params = new URLSearchParams(location.search);
     const preview = params.get('preview');
@@ -775,6 +806,7 @@
     }
     const trickName = params.get('trick');
     if (trickName) playTrick(trickName);
+    if (params.has('battery')) batteryWarning(Number(params.get('battery')));
   }
 
   // Scale the simulated device to fit small windows (never above 1:1).

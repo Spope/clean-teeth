@@ -11,6 +11,13 @@
  *  Starts with the theme saved last time, or the first one. */
 void brushy_ui_create(lv_obj_t * screen);
 
+/** Battery charge (%) at or below which brushy_ui_battery() warns. */
+#define BRUSHY_LOW_BATTERY 25
+
+/** Battery charge at boot, 0-100 or -1 if unknown: at BRUSHY_LOW_BATTERY or below, shows a
+ *  low battery warning for a few seconds (a tap dismisses it). */
+void brushy_ui_battery(int percent);
+
 /** Switch theme by id (e.g. "minecraft", "dragon"). Returns false if unknown. */
 bool brushy_ui_set_theme(const char * id);
 

@@ -48,6 +48,7 @@ void app_main(void)
 
     bsp_display_lock(-1); /* LVGL runs in the adapter's task: take its lock for any lv_ call */
     brushy_ui_create(lv_screen_active());
+    brushy_ui_battery(hal_esp32_battery_percent());
 #if CONFIG_BRUSHY_BENCH
     lv_timer_create(bench_step, 6000, NULL);
 #endif

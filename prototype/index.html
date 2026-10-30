@@ -30,6 +30,10 @@
           <div id="bravo" class="bravo"><span id="bravo-text" class="t-bravo"></span></div>
           <div id="confetti" class="confetti"></div>
           </div>
+          <div id="battery" class="battery" hidden><!-- low battery warning at boot, over the stage -->
+            <div class="battery-icon"><div id="battery-fill" class="battery-fill"></div></div>
+            <div id="battery-text" class="battery-text"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -69,6 +73,7 @@
       <div class="dev-row">
         <button id="dev-skip">Skip to end</button>
         <button id="dev-stop">Back to start</button>
+        <button id="dev-battery">Low battery</button>
       </div>
     </section>
   </main>

@@ -56,13 +56,15 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
   and is collected with a little chime.
 
 The panel under the device is for development only: speed (1×/10×/30×), theme picker,
-tricks (play one now; those the theme doesn't have are greyed out), sound, skip-to-end, reset.
+tricks (play one now; those the theme doesn't have are greyed out), sound, skip-to-end, reset,
+low battery warning.
 
 Preview a state directly with a URL parameter:
 
 ```
 index.html?theme=dragon&preview=idle | sleepy | brushing&t=50 | done
           &trick=peek | peekSide | slide | mine | xp | rainbow | fly | mirror | shake
+          &battery=18   (charge at boot: 25 or less shows the low battery warning)
 ```
 
 ### Prototype layout
@@ -126,6 +128,7 @@ Options:
 --trick peek               play an animation right away: peek | peek_side | slide |
                            mine | xp | rainbow | fly | mirror | shake
 --mute                     no sound
+--battery 18               battery charge at boot: 25 or less shows the low battery warning
 --zoom 0.5                 smaller window, closer to the real 4.4 cm panel size
 --snapshot out.bmp --after 1500   save a screenshot after 1.5 s and quit
 ```
@@ -208,7 +211,8 @@ idf.py -B build_bench -D SDKCONFIG=build_bench/sdkconfig \
 
 ### Still to do
 
-- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`).
+- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`), and the
+  low battery warning with a battery plugged in (the boot log prints `battery NN%`).
 - Frame rate of the tricks that zoom or rotate the whole buddy (peek-a-boo, peek from the
   side, slide, mining, flying: down to 5-15 FPS at their biggest moments) and of Glory's
   sleepy breathing (30-50 FPS).

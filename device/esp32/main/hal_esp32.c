@@ -2,6 +2,7 @@
  * ESP32-S3 implementation of brushy_hal.h:
  *   sound   - brushy_synth.c, rendered in an audio task and played through the ES8311 codec
  *   storage - NVS, namespace "brushy"
+ *   battery - the AXP2101 power chip's fuel gauge, on the BSP's I2C bus
  */
 #include "brushy_hal.h"
 #include "brushy_synth.h"
@@ -9,6 +10,7 @@
 
 #include <string.h>
 #include "bsp/esp-bsp.h"
+#include "driver/i2c_master.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -22,6 +24,12 @@
 #define MAX_NOTES 16      /* longest sequence the UI plays */
 #define QUEUE_LEN 4
 #define NVS_NAMESPACE "brushy"
+
+#define AXP2101_ADDR        0x34
+#define AXP2101_STATUS1     0x00 /* bit 5: USB power good, bit 3: battery connected */
+#define AXP2101_STATUS2     0x01 /* bits 7-5: 001 = charging */
+#define AXP2101_BAT_DET     0x68 /* bit 0: battery detection on */
+#define AXP2101_BAT_PERCENT 0xA4 /* fuel gauge, 0-100 */
 
 static const char * TAG = "hal";
 
@@ -89,10 +97,46 @@ static void storage_init(void)
     ESP_ERROR_CHECK(err);
 }
 
+static i2c_master_dev_handle_t pmu;
+
+static bool pmu_read(uint8_t reg, uint8_t * value)
+{
+    return i2c_master_transmit_receive(pmu, &reg, 1, value, 1, 100) == ESP_OK;
+}
+
+static void battery_init(void)
+{
+    i2c_device_config_t cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = AXP2101_ADDR,
+        .scl_speed_hz = 400000,
+    };
+    uint8_t det;
+    if(i2c_master_bus_add_device(bsp_i2c_get_handle(), &cfg, &pmu) != ESP_OK || !pmu_read(AXP2101_BAT_DET, &det)) {
+        ESP_LOGW(TAG, "AXP2101 not found, battery level unknown");
+        pmu = NULL;
+        return;
+    }
+    uint8_t on[2] = {AXP2101_BAT_DET, det | 1};
+    i2c_master_transmit(pmu, on, sizeof(on), 100);
+}
+
+int hal_esp32_battery_percent(void)
+{
+    uint8_t status1, status2, percent;
+    if(!pmu || !pmu_read(AXP2101_STATUS1, &status1) || !pmu_read(AXP2101_STATUS2, &status2)) return -1;
+    if(!(status1 & (1 << 3))) return -1; /* no battery */
+    bool usb = status1 & (1 << 5), charging = (status2 >> 5) == 1;
+    if(!pmu_read(AXP2101_BAT_PERCENT, &percent) || percent > 100) return -1;
+    ESP_LOGI(TAG, "battery %u%%%s", percent, charging ? ", charging" : usb ? ", on USB" : "");
+    return usb ? -1 : percent; /* plugged in: no need to warn */
+}
+
 void hal_esp32_init(void)
 {
     storage_init();
     audio_init();
+    battery_init();
 }
 
 void brushy_hal_play(const brushy_note_t * notes, uint32_t count)

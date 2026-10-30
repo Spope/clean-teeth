@@ -221,6 +221,52 @@ html, body {
   to { transform: translateY(520px) rotate(720deg); }
 }
 
+/* Low battery warning: over the dimmed stage, swallows taps */
+.battery {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  z-index: 100; /* above the buddy and the effects */
+  animation: battery-in 0.3s ease-out;
+}
+.battery[hidden] { display: none; }
+.battery.closing { opacity: 0; transition: opacity 0.4s; }
+.battery-icon {
+  position: relative;
+  width: 170px;
+  height: 86px;
+  margin-top: -30px;
+  margin-right: 14px;
+  box-sizing: border-box;
+  border: 8px solid #fff;
+  border-radius: 14px;
+  padding: 6px;
+}
+.battery-icon::after { /* the nub */
+  content: "";
+  position: absolute;
+  right: -22px;
+  top: calc(50% - 18px);
+  width: 14px;
+  height: 36px;
+  border-radius: 0 5px 5px 0;
+  background: #fff;
+}
+.battery-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: #ff3b30;
+  animation: battery-blink 0.9s ease-in-out infinite;
+}
+.battery-text { color: #ff3b30; font-size: 40px; line-height: 1; }
+@keyframes battery-in { from { opacity: 0; } }
+@keyframes battery-blink { 50% { opacity: 0.2; } }
+
 /* ---------- Dev panel ---------- */
 .dev {
   width: min(520px, 100%);
@@ -258,5 +304,5 @@ html, body {
 .dev-check { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 
 @media (prefers-reduced-motion: reduce) {
-  .germ-inner, .hint, .seg-track.active { animation: none; }
+  .germ-inner, .hint, .seg-track.active, .battery-fill { animation: none; }
 }

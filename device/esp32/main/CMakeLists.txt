@@ -13,7 +13,7 @@ idf_component_register(
         ${UI_DIR}/themes/minecraft.c
         ${UI_DIR}/themes/dragon.c
     INCLUDE_DIRS . ${UI_DIR}
-    PRIV_REQUIRES nvs_flash esp_psram)
+    PRIV_REQUIRES nvs_flash esp_psram esp_driver_i2c)
 
 # Images: assets/png/*.png -> LVGL C arrays (kept in flash), regenerated when a PNG changes
 idf_build_get_property(python PYTHON)
