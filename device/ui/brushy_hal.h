@@ -28,3 +28,7 @@ void brushy_hal_play(const brushy_note_t * notes, uint32_t count);
 /** Small persistent settings ("theme"); keys are at most 15 characters. */
 uint32_t brushy_hal_load(const char * key, uint32_t fallback);
 void brushy_hal_save(const char * key, uint32_t value);
+
+/** Switch the device off; the power button turns it back on. Doesn't return on the device,
+ *  returns in the simulator (the UI then goes back to idle). */
+void brushy_hal_power_off(void);

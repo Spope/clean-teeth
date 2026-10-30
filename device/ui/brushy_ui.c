@@ -1,11 +1,11 @@
 /**
  * Brushy Buddy UI. Mirrors the behaviour of the browser prototype (prototype/js/app.js):
- *   idle     - buddy waits (falls asleep after 30 s); tap to start,
+ *   idle     - buddy waits (falls asleep after 30 s, the device powers off 2 min later); tap to start,
  *              press and hold to switch theme (when built with more than one)
  *   brushing - 2 minutes, 4 zones of 30 s filling the ring clockwise from top-left;
  *              germs are defeated over time (see brushy_fx.c), tap = giggle
  *   done     - cheer, confetti, "Bravo !", the reward drops and is collected;
- *              back to idle on tap or after 12 s
+ *              back to idle on tap, or the device powers off after 10 s
  * While brushing, the buddy plays a random trick every 8-15 s (see brushy_tricks.c).
  */
 #include "brushy_ui_priv.h"
@@ -17,7 +17,8 @@
 #include <string.h>
 
 #define SLEEP_AFTER_MS    30000
-#define CELEBRATE_MS      12000
+#define POWER_OFF_MS      10000 /* after the end */
+#define ASLEEP_OFF_MS     120000 /* power off once asleep this long */
 #define DONE_TAP_GUARD_MS 1500
 #define LONG_PRESS_MS     900
 
@@ -845,6 +846,12 @@ static void on_input(lv_event_t * e)
     }
 }
 
+static void power_off(void)
+{
+    brushy_hal_power_off();
+    to_idle(); /* still on: the simulator */
+}
+
 static void loop_cb(lv_timer_t * t)
 {
     LV_UNUSED(t);
@@ -860,9 +867,10 @@ static void loop_cb(lv_timer_t * t)
             break;
         case PHASE_IDLE:
             if(ui.mood == MOOD_IDLE && in_phase > SLEEP_AFTER_MS) ui_set_mood(MOOD_SLEEPY);
+            if(in_phase > SLEEP_AFTER_MS + ASLEEP_OFF_MS) power_off();
             break;
         case PHASE_DONE:
-            if(in_phase > CELEBRATE_MS) to_idle();
+            if(in_phase > POWER_OFF_MS) power_off();
             break;
     }
     tricks_update(now);

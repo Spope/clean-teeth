@@ -231,5 +231,5 @@ idf.py -B build_bench -D SDKCONFIG=build_bench/sdkconfig \
   low battery warning with a battery plugged in (the boot log prints `battery NN%`).
 - Frame rate of the tricks that rotate the whole buddy (slide, mining, flying: down to
   13-16 FPS at their biggest moments) and of Glory's sleepy breathing (40-50 FPS).
-- Power: dim or switch off the screen while the buddy sleeps, and power off after a while
-  on battery (the AXP2101 PMU and the PWR button).
+- Power: dim or switch off the screen while the buddy sleeps (it powers off 10 s after the
+  end of brushing, or 2 min after falling asleep; the PWR button turns it on).

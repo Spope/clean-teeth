@@ -3,6 +3,7 @@
  *   sound   - brushy_synth.c, rendered in an audio task and played through the ES8311 codec
  *   storage - NVS, namespace "brushy"
  *   battery - the AXP2101 power chip's fuel gauge, on the BSP's I2C bus
+ *   power   - the AXP2101 switches everything off; its PWRON pin (the PWR button) turns it back on
  */
 #include "brushy_hal.h"
 #include "brushy_synth.h"
@@ -28,6 +29,7 @@
 #define AXP2101_ADDR        0x34
 #define AXP2101_STATUS1     0x00 /* bit 5: USB power good, bit 3: battery connected */
 #define AXP2101_STATUS2     0x01 /* bits 7-5: 001 = charging */
+#define AXP2101_COMMON_CFG  0x10 /* bit 0: power off */
 #define AXP2101_BAT_DET     0x68 /* bit 0: battery detection on */
 #define AXP2101_BAT_PERCENT 0xA4 /* fuel gauge, 0-100 */
 
@@ -163,4 +165,18 @@ void brushy_hal_save(const char * key, uint32_t value)
     if(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &h) != ESP_OK) return;
     if(nvs_set_u32(h, key, value) == ESP_OK) nvs_commit(h);
     nvs_close(h);
+}
+
+void brushy_hal_power_off(void)
+{
+    ESP_LOGI(TAG, "power off");
+    bsp_display_brightness_set(0); /* the UI calls this from LVGL's task, under the display lock */
+    uint8_t cfg;
+    if(pmu && pmu_read(AXP2101_COMMON_CFG, &cfg)) {
+        uint8_t off[2] = {AXP2101_COMMON_CFG, cfg | 1};
+        i2c_master_transmit(pmu, off, sizeof(off), 100);
+        vTaskDelay(pdMS_TO_TICKS(1000)); /* power goes away */
+    }
+    ESP_LOGW(TAG, "still powered");
+    bsp_display_brightness_set(CONFIG_BRUSHY_BRIGHTNESS);
 }

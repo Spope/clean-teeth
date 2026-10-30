@@ -2,6 +2,7 @@
  * Simulator implementation of brushy_hal.h:
  *   sound   - brushy_synth.c, queued to SDL audio
  *   storage - settings in ~/.brushy-buddy-sim, one "key value" per line
+ *   power   - power off is only logged
  */
 #include "brushy_hal.h"
 #include "brushy_synth.h"
@@ -96,4 +97,10 @@ void brushy_hal_save(const char * key, uint32_t value)
     if(!f) return;
     for(int k = 0; k < n; k++) fprintf(f, "%s %u\n", s[k].key, (unsigned)s[k].value);
     fclose(f);
+}
+
+void brushy_hal_power_off(void)
+{
+    printf("power off\n");
+    fflush(stdout);
 }
