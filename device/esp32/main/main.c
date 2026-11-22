@@ -13,6 +13,19 @@
 
 static const char * TAG = "brushy";
 
+#define USB_CHECK_MS 500
+
+static bool usb_power;
+
+/* Shows the battery level when USB power is plugged in. An LVGL timer: runs under the display lock. */
+static void usb_check(lv_timer_t * t)
+{
+    LV_UNUSED(t);
+    bool usb = hal_esp32_usb_power();
+    if(usb && !usb_power) brushy_ui_charging(hal_esp32_battery_percent());
+    usb_power = usb;
+}
+
 #if CONFIG_BRUSHY_BENCH
 /* Plays every scene and trick in turn so LVGL's perf monitor logs the frame rate of each */
 static const struct { const char * theme, * what; } bench_steps[] = {
@@ -53,7 +66,11 @@ void app_main(void)
     bsp_display_lock(-1); /* LVGL runs in the adapter's task: take its lock for any lv_ call */
     bsp_display_brightness_set(CONFIG_BRUSHY_BRIGHTNESS); /* same bus as the frames, so under the lock too */
     brushy_ui_create(lv_screen_active());
-    brushy_ui_battery(hal_esp32_battery_percent());
+    int battery = hal_esp32_battery_percent();
+    usb_power = hal_esp32_usb_power();
+    if(!usb_power) brushy_ui_battery(battery); /* warns when low */
+    else if(hal_esp32_switched_on_by_usb()) brushy_ui_charging(battery);
+    lv_timer_create(usb_check, USB_CHECK_MS, NULL);
 #if CONFIG_BRUSHY_BENCH
     lv_timer_create(bench_step, 6000, NULL);
 #endif

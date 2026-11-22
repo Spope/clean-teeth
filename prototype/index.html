@@ -30,11 +30,15 @@
           <div id="bravo" class="bravo"><span id="bravo-text" class="t-bravo"></span></div>
           <div id="confetti" class="confetti"></div>
           </div>
-          <div id="battery" class="battery" hidden><!-- low battery warning at boot, over the stage -->
+          <div id="battery" class="battery" hidden><!-- low battery at boot, or plugged in; over the stage -->
             <div class="battery-icon"><div id="battery-fill" class="battery-fill"></div></div>
-            <div id="battery-text" class="battery-text"></div>
+            <div class="battery-text">
+              <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 1 4 14h7l-2 9 11-13h-7z"/></svg>
+              <span id="battery-percent"></span>
+            </div>
           </div>
         </div>
+        <div class="usb-cable" aria-hidden="true"><div class="usb-plug"></div><div class="usb-wire"></div></div>
       </div>
     </div>
 
@@ -74,6 +78,7 @@
         <button id="dev-skip">Skip to end</button>
         <button id="dev-stop">Back to start</button>
         <button id="dev-battery">Low battery</button>
+        <label class="dev-check"><input type="checkbox" id="dev-usb"> USB plugged in</label>
       </div>
     </section>
   </main>

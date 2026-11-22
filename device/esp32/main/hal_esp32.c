@@ -2,7 +2,7 @@
  * ESP32-S3 implementation of brushy_hal.h:
  *   sound   - brushy_synth.c, rendered in an audio task and played through the ES8311 codec
  *   storage - NVS, namespace "brushy"
- *   battery - the AXP2101 power chip's fuel gauge, on the BSP's I2C bus
+ *   battery - the AXP2101 power chip's fuel gauge and USB power status, on the BSP's I2C bus
  *   power   - the AXP2101 switches everything off; its PWRON pin (the PWR button) turns it back on
  */
 #include "brushy_hal.h"
@@ -30,6 +30,7 @@
 #define AXP2101_STATUS1     0x00 /* bit 5: USB power good, bit 3: battery connected */
 #define AXP2101_STATUS2     0x01 /* bits 7-5: 001 = charging */
 #define AXP2101_COMMON_CFG  0x10 /* bit 0: power off */
+#define AXP2101_PWRON_SRC   0x20 /* what switched it on; bit 2: USB plugged in */
 #define AXP2101_BAT_DET     0x68 /* bit 0: battery detection on */
 #define AXP2101_BAT_PERCENT 0xA4 /* fuel gauge, 0-100 */
 
@@ -100,6 +101,7 @@ static void storage_init(void)
 }
 
 static i2c_master_dev_handle_t pmu;
+static bool on_by_usb;
 
 static bool pmu_read(uint8_t reg, uint8_t * value)
 {
@@ -121,6 +123,12 @@ static void battery_init(void)
     }
     uint8_t on[2] = {AXP2101_BAT_DET, det | 1};
     i2c_master_transmit(pmu, on, sizeof(on), 100);
+
+    uint8_t source;
+    if(pmu_read(AXP2101_PWRON_SRC, &source)) {
+        on_by_usb = source & (1 << 2);
+        ESP_LOGI(TAG, "switched on by 0x%02x%s", source, on_by_usb ? " (USB plugged in)" : "");
+    }
 }
 
 int hal_esp32_battery_percent(void)
@@ -131,7 +139,20 @@ int hal_esp32_battery_percent(void)
     bool usb = status1 & (1 << 5), charging = (status2 >> 5) == 1;
     if(!pmu_read(AXP2101_BAT_PERCENT, &percent) || percent > 100) return -1;
     ESP_LOGI(TAG, "battery %u%%%s", percent, charging ? ", charging" : usb ? ", on USB" : "");
-    return usb ? -1 : percent; /* plugged in: no need to warn */
+    return percent;
+}
+
+bool hal_esp32_usb_power(void)
+{
+    static bool usb; /* the last reading, kept if the chip doesn't answer */
+    uint8_t status1;
+    if(pmu && pmu_read(AXP2101_STATUS1, &status1)) usb = status1 & (1 << 5);
+    return usb;
+}
+
+bool hal_esp32_switched_on_by_usb(void)
+{
+    return on_by_usb;
 }
 
 void hal_esp32_init(void)

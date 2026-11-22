@@ -11,7 +11,7 @@
     longPressMs: 900,      // hold on the start screen to switch theme
     trickEveryMs: [8000, 15000],  // random pause between tricks
     lowBattery: 25,        // % at boot at or below which the warning shows
-    batteryWarnMs: 5000,
+    batteryShowMs: 5000,   // low battery warning, or the level when USB is plugged in
   };
 
   const SIZE = 466;
@@ -678,19 +678,46 @@
     setTimeout(() => { host.innerHTML = ''; }, 4500);
   }
 
-  // ---------- Low battery warning ----------
-  // Shown at boot (device: brushy_ui_battery). Covers the stage: a tap only dismisses it.
+  // ---------- Battery level ----------
+  // The low battery warning at boot (device: brushy_ui_battery), or the charge when USB is
+  // plugged in (brushy_ui_charging). Covers the stage: a tap only dismisses it.
   let batteryTimer = null;
-  function batteryWarning(percent) {
-    if (!(percent >= 0 && percent <= CONFIG.lowBattery)) return;
+  function showBattery(percent, isCharging) {
     const el = $('battery');
-    $('battery-fill').style.width = `${Math.max(percent, 8)}%`;
-    $('battery-text').textContent = `${percent}%`;
+    const fill = $('battery-fill');
+    el.classList.toggle('charging', isCharging);
+    fill.style.width = `${Math.max(percent, 8)}%`;
+    fill.style.animation = 'none';
+    void fill.offsetWidth; // restart its animation when shown again
+    fill.style.animation = '';
+    $('battery-percent').textContent = `${percent}%`;
     el.hidden = false;
     el.classList.remove('closing');
-    Sound.lowBattery();
+    if (isCharging) Sound.charging(); else Sound.lowBattery();
     clearTimeout(batteryTimer);
-    batteryTimer = setTimeout(closeBatteryWarning, CONFIG.batteryWarnMs);
+    batteryTimer = setTimeout(closeBatteryWarning, CONFIG.batteryShowMs);
+  }
+  function batteryWarning(percent) {
+    if (percent >= 0 && percent <= CONFIG.lowBattery) showBattery(percent, false);
+  }
+  function charging(percent) {
+    if (!(percent >= 0 && percent <= 100)) return;
+    if (state.phase !== 'brushing') { // wakes the buddy (device: restarts the power-off countdown)
+      state.phaseSince = performance.now();
+      if (state.mood === 'sleepy') setMood('idle');
+    }
+    showBattery(percent, true);
+  }
+
+  // USB power, from the dev panel. Plugging in shows the charge, as the device does (unplugging
+  // shows nothing). The device would read the charge from its power chip.
+  let usb = false;
+  function setUsb(on, percent = 62) {
+    if (on === usb) return;
+    usb = on;
+    $('dev-usb').checked = on;
+    $('device').classList.toggle('usb', on);
+    if (on) charging(percent);
   }
   function closeBatteryWarning() {
     const el = $('battery');
@@ -777,6 +804,7 @@
     });
     $('dev-stop').addEventListener('click', toIdle);
     $('dev-battery').addEventListener('click', () => batteryWarning(18));
+    $('dev-usb').addEventListener('change', (e) => setUsb(e.target.checked));
   }
 
   function playTrick(name) {
@@ -787,7 +815,8 @@
 
   // Jump straight to a state, e.g. index.html?theme=dragon&preview=brushing&t=50&trick=peek
   // (preview = idle | sleepy | brushing | done; trick = peek | peekSide | slide | mine |
-  // rainbow | fly | mirror | shake; battery = charge at boot, warns at 25 or less).
+  // rainbow | fly | mirror | shake; battery = charge at boot, warns at 25 or less;
+  // charging = plugs in USB with that charge).
   // Handy for design reviews.
   function applyPreview() {
     const params = new URLSearchParams(location.search);
@@ -807,6 +836,7 @@
     const trickName = params.get('trick');
     if (trickName) playTrick(trickName);
     if (params.has('battery')) batteryWarning(Number(params.get('battery')));
+    if (params.has('charging')) setUsb(true, Number(params.get('charging')));
   }
 
   // Scale the simulated device to fit small windows (never above 1:1).
