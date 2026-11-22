@@ -16,7 +16,7 @@ and the simulator; each device is built with one of them):
 prototype/     Phase 1: browser prototype, and the source of all themes and artwork (SVG)
 assets/        themes exported from the prototype for the device (PNGs + settings)
 device/ui/     Phase 2: device UI in C + LVGL (platform-independent)
-device/sim/    Phase 2: desktop simulator (SDL window)
+device/sim/    Phase 2: simulator (SDL window, or a web page)
 device/esp32/  Phase 3: firmware for the board (ESP-IDF)
 tools/         theme export + conversion to C
 docs/          how to create a theme
@@ -140,6 +140,37 @@ Options:
 ```
 
 Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
+
+### On a web page
+
+The simulator also runs in a browser: the same C, compiled to WebAssembly with
+[Emscripten](https://emscripten.org).
+
+```sh
+brew install emscripten                           # once
+tools/build_web.sh                                # builds device/sim/build-web
+python3 -m http.server -d device/sim/build-web    # then open http://localhost:8000
+```
+
+The page reads the simulator's options from its URL: `?theme=dragon&preview=brushing:40&mute`
+(theme, preview, trick, speed, battery, charging, mute). It fills its frame, so embed it with a
+square `<iframe>`. Outside the round screen it is transparent. Sound starts after the first tap,
+as browsers require, and nothing is saved once the page is closed.
+
+To put it on a website, copy its three files there (`index.html`, `brushy_sim.js`,
+`brushy_sim.wasm`, about 1.8 MB to download, compressed), for example into a Hugo blog:
+
+```sh
+tools/build_web.sh ~/blog/static/brushy-sim
+```
+
+For Hugo, `device/sim/web/hugo/brushy-sim.html` is a shortcode: copy it to the blog's
+`layouts/_shortcodes/` (`layouts/shortcodes/` before Hugo 0.146), then in a post:
+
+```
+{{< brushy-sim theme="dragon" >}}
+{{< brushy-sim theme="minecraft" preview="brushing:40" size="300" >}}
+```
 
 ### How the device UI is built
 

@@ -7,9 +7,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 get_filename_component(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(UI_DIR ${REPO_ROOT}/device/ui)
 
-# SDL2 (on macOS: `brew install sdl2`, which provides SDL2 on top of SDL3)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+# SDL2 (on macOS: `brew install sdl2`, which provides SDL2 on top of SDL3).
+# In a browser (emcmake, see README "On a web page"): Emscripten's own SDL2.
+if(EMSCRIPTEN)
+    add_library(sdl2_web INTERFACE)
+    target_compile_options(sdl2_web INTERFACE -sUSE_SDL=2)
+    target_link_options(sdl2_web INTERFACE -sUSE_SDL=2)
+    add_library(PkgConfig::SDL2 ALIAS sdl2_web)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
+endif()
 
 # LVGL, pinned
 set(LV_BUILD_CONF_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lv_conf.h CACHE PATH "" FORCE)
@@ -44,3 +52,13 @@ target_link_libraries(brushy_sim PRIVATE lvgl PkgConfig::SDL2 m)
 set_source_files_properties(main.c hal_sim.c ${UI_DIR}/brushy_ui.c ${UI_DIR}/brushy_fx.c
     ${UI_DIR}/brushy_tricks.c ${UI_DIR}/brushy_synth.c ${ASSET_DIR}/themes.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra")
+
+# In a browser: brushy_sim.js + brushy_sim.wasm, started by web/index.html (copied next to them)
+if(EMSCRIPTEN)
+    set_target_properties(brushy_sim PROPERTIES SUFFIX ".js")
+    target_link_options(brushy_sim PRIVATE
+        -sALLOW_MEMORY_GROWTH  # LVGL's image cache holds MBs
+        -sENVIRONMENT=web
+        -sEXIT_RUNTIME)        # an error (unknown theme...) reaches the page's onExit
+    configure_file(web/index.html ${CMAKE_BINARY_DIR}/index.html COPYONLY)
+endif()
