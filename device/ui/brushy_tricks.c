@@ -310,7 +310,7 @@ static void trick_done_cb(lv_anim_t * a)
     tricks_schedule();
 }
 
-static bool available(trick_t kind)
+bool tricks_available(trick_t kind)
 {
     const brushy_theme_t * t = ui.theme;
     switch(kind) {
@@ -324,7 +324,7 @@ static bool available(trick_t kind)
 
 bool tricks_start(trick_t kind)
 {
-    if(!available(kind)) return false;
+    if(!tricks_available(kind)) return false;
     tricks_stop();
     tr.kind = tr.last = kind;
     tr.n_frames = tr.n_events = tr.next_event = tr.hits = tr.n_orbs = 0;
@@ -385,7 +385,7 @@ void tricks_update(uint32_t now)
     trick_t pool[TRICK_COUNT];
     int n = 0;
     for(trick_t k = 0; k < TRICK_COUNT; k++) {
-        if(available(k) && k != tr.last) pool[n++] = k;
+        if(tricks_available(k) && k != tr.last) pool[n++] = k;
     }
     tricks_start(pool[lv_rand(0, n - 1)]);
 }

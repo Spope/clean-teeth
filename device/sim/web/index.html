@@ -1,7 +1,9 @@
 <!doctype html>
 <!--
-  The simulator in a browser: the same C code, compiled to WebAssembly (see README, "On a web page").
-  Meant to be embedded with an <iframe>; it fills the frame (keep it square).
+  The simulator in a browser: the same C code, compiled to WebAssembly (see README, "On a web page"),
+  in the prototype's device and control panel (device.css, from prototype/css/).
+  Meant to be embedded with an <iframe>: it tells the page around it how tall it is
+  (message {brushySimHeight}), see device/sim/web/hugo/brushy-sim.html.
 
   Options come from the URL, as the desktop simulator's command line:
     index.html?theme=dragon&preview=brushing:40&trick=peek&speed=10&battery=18&charging=62&mute
@@ -11,82 +13,227 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Brushy Buddy</title>
+<link rel="stylesheet" href="device.css">
 <style>
-  html, body {
-    margin: 0;
-    height: 100%;
-    overflow: hidden;
-    background: transparent; /* shows the page around the round screen */
+  /* Embedded in another page: no background of its own, and only as tall as its content */
+  html, body { background: transparent; overflow: hidden; }
+  .app { min-height: 0; padding: 20px 20px 24px; }
+  .device { /* a smaller shadow than the prototype's: the frame would cut it off */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.15);
   }
-  body {
-    display: grid;
-    place-items: center;
-  }
-  canvas, #error {
-    grid-area: 1 / 1;
-    width: 100vmin;
-    height: 100vmin;
-    border-radius: 50%; /* the panel is round */
-  }
-  canvas {
+
+  .screen { touch-action: none; } /* a long press switches theme: no zoom, menu or selection */
+  .screen canvas {
     display: block;
+    width: 100%;
+    height: 100%;
     outline: none;
-    touch-action: none; /* a long press switches theme: no zoom, menu or selection */
-    user-select: none;
-    -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
   }
-  #error {
-    display: none;
+  .error {
+    position: absolute;
+    inset: 0;
+    display: grid;
     place-items: center;
-    box-sizing: border-box;
     padding: 20%;
     background: #1b1b20;
-    color: #fff;
-    font: 15px/1.4 system-ui, sans-serif;
+    font-size: 18px;
     text-align: center;
   }
+  .error[hidden] { display: none; }
 </style>
 </head>
 <body>
-<canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
-<div id="error"></div>
+<main class="app" id="app">
+  <div class="device-slot" id="slot">
+    <div class="device" id="device">
+      <div class="screen">
+        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+        <div id="error" class="error" hidden></div>
+      </div>
+      <div class="usb-cable" aria-hidden="true"><div class="usb-plug"></div><div class="usb-wire"></div></div>
+    </div>
+  </div>
+
+  <!-- As in the prototype (prototype/index.html), driving the simulator -->
+  <section class="dev" id="panel" aria-label="Simulator controls">
+    <div class="dev-row">
+      <span class="dev-label">Time</span>
+      <output id="dev-time">0:00 / 2:00</output>
+      <span id="dev-phase" class="dev-chip">idle</span>
+    </div>
+    <div class="dev-row">
+      <span class="dev-label">Speed</span>
+      <div class="seg" id="dev-speed">
+        <button data-speed="1">1×</button>
+        <button data-speed="10">10×</button>
+        <button data-speed="30">30×</button>
+      </div>
+    </div>
+    <div class="dev-row">
+      <span class="dev-label">Theme</span>
+      <select id="dev-theme"></select>
+      <label class="dev-check"><input type="checkbox" id="dev-sound" checked> Sound</label>
+    </div>
+    <div class="dev-row">
+      <span class="dev-label">Tricks</span>
+      <button data-trick="peek">Peek-a-boo</button>
+      <button data-trick="peek_side">Peek side</button>
+      <button data-trick="slide">Slide</button>
+      <button data-trick="mine">Mine</button>
+      <button data-trick="xp">XP</button>
+      <button data-trick="rainbow">Rainbow</button>
+      <button data-trick="fly">Fly</button>
+      <button data-trick="mirror">Mirror</button>
+      <button data-trick="shake">Shake</button>
+    </div>
+    <div class="dev-row">
+      <button id="dev-skip">Skip to end</button>
+      <button id="dev-stop">Back to start</button>
+      <button id="dev-battery">Low battery</button>
+      <label class="dev-check"><input type="checkbox" id="dev-usb"> USB plugged in</label>
+    </div>
+  </section>
+</main>
 <script>
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const BRUSHING_SECONDS = 120; // BRUSHY_BRUSHING_SECONDS (brushy_ui.h)
+  const DEVICE_SIZE = 520;      // the device, bezel included (device.css)
+  const USB_CHARGE = 62;        // charge shown when USB is plugged in, as in the prototype
+
+  // ---------- Options from the URL, as on the desktop simulator's command line ----------
   const VALUE_OPTIONS = ['theme', 'preview', 'trick', 'speed', 'battery', 'charging'];
   const FLAG_OPTIONS = ['mute'];
-
   const args = [];
-  for (const [key, value] of new URLSearchParams(location.search)) {
+  for (const [key, value] of params) {
     if (VALUE_OPTIONS.includes(key) && value) args.push('--' + key, value);
     else if (FLAG_OPTIONS.includes(key)) args.push('--' + key);
   }
 
-  function showError(text) {
-    const box = document.getElementById('error');
-    box.textContent = text;
-    box.style.display = 'grid';
-  }
-
+  // ---------- The simulator ----------
   let lastError = '';
+  let stopped = false;
+  function fail(text) {
+    stopped = true;
+    $('error').textContent = text;
+    $('error').hidden = false;
+    $('panel').inert = true;
+  }
   var Module = {
-    canvas: document.getElementById('canvas'),
+    canvas: $('canvas'),
     arguments: args,
     printErr(text) {
       console.error(text);
       lastError = text;
     },
-    onExit(code) { /* only on an error: otherwise it runs until the page closes */
-      if (code) showError(lastError || 'The simulator stopped');
+    onExit(code) { // only on an error: otherwise it runs until the page closes
+      if (code) fail(lastError || 'The simulator stopped');
     },
     onAbort() {
-      showError('The simulator could not run in this browser');
+      fail('The simulator could not run in this browser');
     },
+    postRun: [() => { if (!stopped) setupPanel(); }],
   };
 
   // Browsers only let sound start from a tap (Safari: during the tap itself)
   for (const type of ['pointerup', 'touchend']) {
     addEventListener(type, () => Module.SDL2?.audioContext?.resume(), true);
+  }
+
+  // ---------- Control panel ----------
+  function setupPanel() {
+    const fn = (name, ret, argTypes = []) => Module.cwrap('web_' + name, ret, argTypes); // device/sim/web.c
+    const sim = {
+      themeCount: fn('theme_count', 'number'),
+      themeId: fn('theme_id', 'string', ['number']),
+      themeName: fn('theme_name', 'string', ['number']),
+      themeAccent: fn('theme_accent', 'number', ['number']),
+      theme: fn('theme', 'string'),
+      setTheme: fn('set_theme', 'boolean', ['string']),
+      trick: fn('trick', 'boolean', ['string']),
+      hasTrick: fn('has_trick', 'boolean', ['string']),
+      setSpeed: fn('set_speed', null, ['number']),
+      preview: fn('preview', null, ['string', 'number']),
+      state: fn('state', 'string'),
+      elapsed: fn('elapsed', 'number'),
+      battery: fn('battery', null, ['number']),
+      charging: fn('charging', null, ['number']),
+      setMute: fn('set_mute', null, ['boolean']),
+    };
+
+    const select = $('dev-theme');
+    const accents = {};
+    for (let i = 0; i < sim.themeCount(); i++) {
+      select.add(new Option(sim.themeName(i), sim.themeId(i)));
+      accents[sim.themeId(i)] = '#' + sim.themeAccent(i).toString(16).padStart(6, '0');
+    }
+    select.addEventListener('change', () => sim.setTheme(select.value));
+
+    const speeds = $('dev-speed').querySelectorAll('button');
+    const showSpeed = (speed) => speeds.forEach((b) => b.classList.toggle('on', Number(b.dataset.speed) === speed));
+    showSpeed(Number(params.get('speed')) || 1);
+    speeds.forEach((b) => b.addEventListener('click', () => {
+      sim.setSpeed(Number(b.dataset.speed));
+      showSpeed(Number(b.dataset.speed));
+    }));
+
+    $('dev-sound').checked = !params.has('mute');
+    $('dev-sound').addEventListener('change', (e) => sim.setMute(!e.target.checked));
+
+    const tricks = document.querySelectorAll('[data-trick]');
+    tricks.forEach((b) => b.addEventListener('click', () => sim.trick(b.dataset.trick)));
+    $('dev-skip').addEventListener('click', () => sim.preview('brushing', BRUSHING_SECONDS - 3));
+    $('dev-stop').addEventListener('click', () => sim.preview('idle', 0));
+    $('dev-battery').addEventListener('click', () => sim.battery(18));
+
+    // Plugging in shows the charge, as the device does (unplugging shows nothing)
+    const usb = $('dev-usb');
+    const showUsb = (on) => $('device').classList.toggle('usb', on);
+    usb.checked = params.has('charging');
+    showUsb(usb.checked);
+    usb.addEventListener('change', () => {
+      showUsb(usb.checked);
+      if (usb.checked) sim.charging(USB_CHARGE);
+    });
+
+    // Follow the simulator: time, state, and the theme (a long press on the screen switches it)
+    const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    let theme = null;
+    function refresh() {
+      const state = sim.state();
+      const elapsed = sim.elapsed();
+      const zone = Math.min(3, Math.floor(elapsed / (BRUSHING_SECONDS / 4))) + 1;
+      $('dev-time').textContent = `${fmt(elapsed)} / ${fmt(BRUSHING_SECONDS)}`
+        + (state === 'brushing' ? ` · zone ${zone}` : '');
+      $('dev-phase').textContent = state;
+      if (sim.theme() !== theme) {
+        theme = sim.theme();
+        select.value = theme;
+        document.documentElement.style.setProperty('--accent', accents[theme]);
+        tricks.forEach((b) => { b.disabled = !sim.hasTrick(b.dataset.trick); });
+      }
+      if (!stopped) setTimeout(refresh, 100);
+    }
+    refresh();
+  }
+
+  // ---------- Layout ----------
+  // Scale the device to the width available (never above 1:1), as the prototype does
+  function fit() {
+    const scale = Math.min(1, (document.documentElement.clientWidth - 40) / DEVICE_SIZE); // .app padding
+    $('slot').style.width = $('slot').style.height = `${DEVICE_SIZE * scale}px`;
+    $('device').style.transform = `scale(${scale})`;
+  }
+  fit();
+  addEventListener('resize', fit);
+
+  // In a frame: tell the page around it how tall this is, as the panel wraps on narrow screens
+  if (parent !== window) {
+    new ResizeObserver(() => {
+      parent.postMessage({ brushySimHeight: Math.ceil($('app').getBoundingClientRect().height) }, '*');
+    }).observe($('app'));
   }
 </script>
 <script src="brushy_sim.js"></script>

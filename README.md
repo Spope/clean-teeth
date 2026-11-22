@@ -77,7 +77,8 @@ index.html?theme=dragon&preview=idle | sleepy | brushing&t=50 | done
 ```
 prototype/
   index.html            simulated device + dev panel
-  css/style.css         device, ring, germs, overlays
+  css/device.css        device, dev panel (shared with the simulator's web page)
+  css/style.css         what the screen shows: ring, germs, overlays
   js/app.js             timer, phases, ring, germs, input
   js/pixel.js           pixel-art helper (grid of letters -> SVG)
   js/sound.js           tiny WebAudio synth (no audio files)
@@ -144,7 +145,8 @@ Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
 ### On a web page
 
 The simulator also runs in a browser: the same C, compiled to WebAssembly with
-[Emscripten](https://emscripten.org).
+[Emscripten](https://emscripten.org), in the prototype's device and dev panel
+(`prototype/css/device.css`; `device/sim/web.c` connects the panel to the device UI).
 
 ```sh
 brew install emscripten                           # once
@@ -153,23 +155,25 @@ python3 -m http.server -d device/sim/build-web    # then open http://localhost:8
 ```
 
 The page reads the simulator's options from its URL: `?theme=dragon&preview=brushing:40&mute`
-(theme, preview, trick, speed, battery, charging, mute). It fills its frame, so embed it with a
-square `<iframe>`. Outside the round screen it is transparent. Sound starts after the first tap,
-as browsers require, and nothing is saved once the page is closed.
+(theme, preview, trick, speed, battery, charging, mute). Embed it with an `<iframe>`: the device
+scales to the frame's width, and the page has no background of its own. Its height depends on how
+the panel wraps, so it posts it to the page around it (`{brushySimHeight}`), which resizes the
+frame. Sound starts after the first tap, as browsers require, and nothing is saved once the page
+is closed.
 
-To put it on a website, copy its three files there (`index.html`, `brushy_sim.js`,
+To put it on a website, copy its four files there (`index.html`, `device.css`, `brushy_sim.js`,
 `brushy_sim.wasm`, about 1.8 MB to download, compressed), for example into a Hugo blog:
 
 ```sh
 tools/build_web.sh ~/blog/static/brushy-sim
 ```
 
-For Hugo, `device/sim/web/hugo/brushy-sim.html` is a shortcode: copy it to the blog's
-`layouts/_shortcodes/` (`layouts/shortcodes/` before Hugo 0.146), then in a post:
+For Hugo, `device/sim/web/hugo/brushy-sim.html` is a shortcode (frame and resizing): copy it to
+the blog's `layouts/_shortcodes/` (`layouts/shortcodes/` before Hugo 0.146), then in a post:
 
 ```
 {{< brushy-sim theme="dragon" >}}
-{{< brushy-sim theme="minecraft" preview="brushing:40" size="300" >}}
+{{< brushy-sim theme="minecraft" preview="brushing:40" size="400" >}}
 ```
 
 ### How the device UI is built
