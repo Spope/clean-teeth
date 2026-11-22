@@ -11,3 +11,5 @@ device/esp32/sdkconfig
 inspiration/
 # per-theme and benchmark builds (README)
 device/esp32/build_*/
+# the simulator built for web pages (tools/build_web.sh)
+device/sim/build-web/

@@ -10,6 +10,8 @@
  * --battery reports that charge at boot, as the device does (warns at 25% or below).
  * --charging shows that charge as when USB is plugged in.
  * --snapshot renders the screen to a BMP after MS milliseconds and exits.
+ *
+ * It also runs in a web page, compiled to WebAssembly (tools/build_web.sh, web/index.html).
  */
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
@@ -20,6 +22,16 @@
 #include "lvgl.h"
 #include "brushy_ui.h"
 #include "hal_sim.h"
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+/* In a browser (device/sim/web/): called every frame, as a loop would freeze the page */
+static void web_frame(void)
+{
+    lv_timer_handler();
+}
+#endif
 
 #define SCREEN_SIZE 466
 #define BEZEL_COLOR 0x1b1b20
@@ -155,6 +167,10 @@ int main(int argc, char ** argv)
     brushy_ui_charging(charging);
     add_round_mask();
 
+#ifdef __EMSCRIPTEN__
+    SDL_EventState(SDL_MOUSEWHEEL, SDL_IGNORE); /* lets the wheel scroll the page around it */
+    emscripten_set_main_loop(web_frame, 0, true);
+#endif
     const uint32_t started = SDL_GetTicks();
     while(1) {
         uint32_t idle = lv_timer_handler();

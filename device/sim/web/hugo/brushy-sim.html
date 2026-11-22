@@ -1,0 +1,16 @@
+{{- /*
+  Hugo shortcode: the Brushy Buddy simulator in a post. Copy this file to your site's
+  layouts/_shortcodes/ (layouts/shortcodes/ before Hugo 0.146), and the simulator
+  (tools/build_web.sh) to static/brushy-sim/.
+
+    {{< brushy-sim theme="dragon" >}}
+    {{< brushy-sim theme="minecraft" preview="brushing:40" size="300" >}}
+
+  Options as on the simulator's command line: theme, preview, trick, speed, battery,
+  charging, mute="true"; and size, its width in pixels at most (default 466, the real screen).
+*/ -}}
+{{- $size := .Get "size" | default 466 -}}
+<iframe src="{{ printf "brushy-sim/?%s" (querify .Params) | relURL }}"
+        title="Brushy Buddy simulator" loading="lazy"
+        style="display: block; margin: 1.5rem auto; border: 0; border-radius: 50%;
+               width: 100%; max-width: {{ $size }}px; height: auto; aspect-ratio: 1"></iframe>

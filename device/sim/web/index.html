@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+  The simulator in a browser: the same C code, compiled to WebAssembly (see README, "On a web page").
+  Meant to be embedded with an <iframe>; it fills the frame (keep it square).
+
+  Options come from the URL, as the desktop simulator's command line:
+    index.html?theme=dragon&preview=brushing:40&trick=peek&speed=10&battery=18&charging=62&mute
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brushy Buddy</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: transparent; /* shows the page around the round screen */
+  }
+  body {
+    display: grid;
+    place-items: center;
+  }
+  canvas, #error {
+    grid-area: 1 / 1;
+    width: 100vmin;
+    height: 100vmin;
+    border-radius: 50%; /* the panel is round */
+  }
+  canvas {
+    display: block;
+    outline: none;
+    touch-action: none; /* a long press switches theme: no zoom, menu or selection */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #error {
+    display: none;
+    place-items: center;
+    box-sizing: border-box;
+    padding: 20%;
+    background: #1b1b20;
+    color: #fff;
+    font: 15px/1.4 system-ui, sans-serif;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<div id="error"></div>
+<script>
+  const VALUE_OPTIONS = ['theme', 'preview', 'trick', 'speed', 'battery', 'charging'];
+  const FLAG_OPTIONS = ['mute'];
+
+  const args = [];
+  for (const [key, value] of new URLSearchParams(location.search)) {
+    if (VALUE_OPTIONS.includes(key) && value) args.push('--' + key, value);
+    else if (FLAG_OPTIONS.includes(key)) args.push('--' + key);
+  }
+
+  function showError(text) {
+    const box = document.getElementById('error');
+    box.textContent = text;
+    box.style.display = 'grid';
+  }
+
+  let lastError = '';
+  var Module = {
+    canvas: document.getElementById('canvas'),
+    arguments: args,
+    printErr(text) {
+      console.error(text);
+      lastError = text;
+    },
+    onExit(code) { /* only on an error: otherwise it runs until the page closes */
+      if (code) showError(lastError || 'The simulator stopped');
+    },
+    onAbort() {
+      showError('The simulator could not run in this browser');
+    },
+  };
+
+  // Browsers only let sound start from a tap (Safari: during the tap itself)
+  for (const type of ['pointerup', 'touchend']) {
+    addEventListener(type, () => Module.SDL2?.audioContext?.resume(), true);
+  }
+</script>
+<script src="brushy_sim.js"></script>
+</body>
+</html>
