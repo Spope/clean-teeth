@@ -4,7 +4,7 @@
  *   brushy_sim [--theme ID] [--speed N] [--preview STATE[:SECONDS]] [--trick NAME] [--mute]
  *              [--battery PERCENT] [--charging PERCENT] [--zoom F] [--snapshot FILE.bmp [--after MS]]
  *
- * ID is minecraft | dragon (default: the last one used; long-press to switch).
+ * ID is a theme id: minecraft | dragon | ... (default: the last one used; long-press to switch).
  * STATE is idle | sleepy | brushing | done (e.g. --preview brushing:50).
  * NAME is peek | peek_side | slide | mine | xp | rainbow | fly | mirror | shake: play it right away.
  * --battery reports that charge at boot, as the device does (warns at 25% or below).

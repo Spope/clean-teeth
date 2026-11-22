@@ -24,21 +24,12 @@ FetchContent_Declare(lvgl
 FetchContent_MakeAvailable(lvgl)
 target_link_libraries(lvgl PUBLIC PkgConfig::SDL2)
 
-# Images: assets/png/*.png -> LVGL C arrays, regenerated when a PNG changes
+# Themes: every one exported to assets/themes/ (see docs/themes.md), converted to C
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-file(GLOB ASSET_PNGS CONFIGURE_DEPENDS ${REPO_ROOT}/assets/png/*.png)
+include(${UI_DIR}/themes.cmake)
+brushy_all_themes(THEMES)
 set(ASSET_DIR ${CMAKE_BINARY_DIR}/assets)
-set(ASSET_SRCS)
-foreach(png ${ASSET_PNGS})
-    get_filename_component(stem ${png} NAME_WE)
-    list(APPEND ASSET_SRCS ${ASSET_DIR}/img_${stem}.c)
-endforeach()
-add_custom_command(
-    OUTPUT ${ASSET_SRCS} ${ASSET_DIR}/assets.h
-    COMMAND Python3::Interpreter ${REPO_ROOT}/tools/png2lvgl.py ${ASSET_DIR} ${ASSET_PNGS}
-    DEPENDS ${ASSET_PNGS} ${REPO_ROOT}/tools/png2lvgl.py
-    COMMENT "Converting PNG assets to LVGL images"
-    VERBATIM)
+brushy_theme_sources(THEME_SRCS ${ASSET_DIR} ${Python3_EXECUTABLE} ${THEMES})
 
 add_executable(brushy_sim
     main.c
@@ -47,14 +38,9 @@ add_executable(brushy_sim
     ${UI_DIR}/brushy_fx.c
     ${UI_DIR}/brushy_tricks.c
     ${UI_DIR}/brushy_synth.c
-    ${UI_DIR}/themes/themes.c
-    ${UI_DIR}/themes/minecraft.c
-    ${UI_DIR}/themes/dragon.c
-    ${ASSET_SRCS}
-    ${ASSET_DIR}/assets.h)
+    ${THEME_SRCS})
 target_include_directories(brushy_sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${UI_DIR} ${ASSET_DIR})
 target_link_libraries(brushy_sim PRIVATE lvgl PkgConfig::SDL2 m)
 set_source_files_properties(main.c hal_sim.c ${UI_DIR}/brushy_ui.c ${UI_DIR}/brushy_fx.c
-    ${UI_DIR}/brushy_tricks.c ${UI_DIR}/brushy_synth.c ${UI_DIR}/themes/themes.c
-    ${UI_DIR}/themes/minecraft.c ${UI_DIR}/themes/dragon.c
+    ${UI_DIR}/brushy_tricks.c ${UI_DIR}/brushy_synth.c ${ASSET_DIR}/themes.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra")

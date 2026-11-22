@@ -1,19 +1,11 @@
 menu "Brushy Buddy"
-    choice BRUSHY_THEME_CHOICE
-        prompt "Theme"
-        default BRUSHY_THEME_MINECRAFT
-        help
-            The device is built with one theme: only its artwork goes into the firmware.
-        config BRUSHY_THEME_MINECRAFT
-            bool "Minecraft"
-        config BRUSHY_THEME_DRAGON
-            bool "Les Royaumes de feu (dragon)"
-    endchoice
-
     config BRUSHY_THEME
-        string
-        default "minecraft" if BRUSHY_THEME_MINECRAFT
-        default "dragon" if BRUSHY_THEME_DRAGON
+        string "Theme"
+        default "minecraft"
+        help
+            The id of the theme the device is built with, e.g. minecraft or dragon: one of
+            assets/themes/<id>.json (exported from prototype/themes/<id>.js, see docs/themes.md).
+            Only its artwork goes into the firmware. Each theme has an sdkconfig.<id> that sets it.
 
     config BRUSHY_BRIGHTNESS
         int "Screen brightness (%)"

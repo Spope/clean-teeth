@@ -1,12 +1,14 @@
 /**
  * A theme: buddy poses, germs, sprites, lettering, colours and sound flavour.
- * All images come from the prototype (prototype/themes/<id>.js), exported by
- * tools/export_assets.sh and converted at build time.
+ * Themes aren't written in C: each comes from the prototype (prototype/themes/<id>.js),
+ * exported by tools/export_assets.sh to assets/, and turned into a brushy_theme_t at build
+ * time by tools/png2lvgl.py (build/assets/themes.c). See docs/themes.md.
  */
 #pragma once
 
 #include "lvgl.h"
 
+/** A theme's pose `foo_bar` (prototype `poses`) fills poses[BRUSHY_POSE_FOO_BAR]. */
 typedef enum {
     /* every theme */
     BRUSHY_POSE_IDLE,
@@ -25,7 +27,10 @@ typedef enum {
     BRUSHY_POSE_FLY_A,     /* wings up */
     BRUSHY_POSE_FLY_B,     /* wings down */
     BRUSHY_POSE_RAINBOW_1, /* ...to RAINBOW_5: scale colours */
-    BRUSHY_POSE_RAINBOW_5 = BRUSHY_POSE_RAINBOW_1 + 4,
+    BRUSHY_POSE_RAINBOW_2,
+    BRUSHY_POSE_RAINBOW_3,
+    BRUSHY_POSE_RAINBOW_4,
+    BRUSHY_POSE_RAINBOW_5,
     BRUSHY_POSE_COUNT,
 } brushy_pose_t;
 
@@ -81,6 +86,7 @@ typedef struct {
     const lv_image_dsc_t * reward;
     const lv_image_dsc_t * bravo;
     const lv_image_dsc_t * clock_digits[11]; /**< big countdown 0-9 and ":" (A8, tinted) */
+    /* the prototype's sprites, by name */
     const lv_image_dsc_t * sparkle;
     const lv_image_dsc_t * block;         /**< mine trick */
     const lv_image_dsc_t * block_cracked; /**< mine trick */
@@ -88,44 +94,6 @@ typedef struct {
     const lv_image_dsc_t * venom;         /**< BRUSHY_POP_VENOM */
 } brushy_theme_t;
 
-#define BRUSHY_GERM_TILT_FRAMES(t, n) \
-    {&img_##t##_germ_##n##_tilt_0, &img_##t##_germ_##n##_tilt_1, &img_##t##_germ_##n##_tilt_2, \
-     &img_##t##_germ_##n##_tilt_3, &img_##t##_germ_##n, &img_##t##_germ_##n##_tilt_5, \
-     &img_##t##_germ_##n##_tilt_6, &img_##t##_germ_##n##_tilt_7, &img_##t##_germ_##n##_tilt_8}
-
-/** For themes whose buddy sways while brushing (needs a TILTS entry in tools/png2lvgl.py) */
-#define BRUSHY_SWAY_FRAMES(t, pose) \
-    {&img_##t##_##pose##_tilt_0, &img_##t##_##pose##_tilt_1, &img_##t##_##pose, \
-     &img_##t##_##pose##_tilt_3, &img_##t##_##pose##_tilt_4}
-
-#define BRUSHY_PEEK_FRAMES(t, pose, POSE) \
-    .peek[BRUSHY_POSE_##POSE] = {&img_##t##_##pose##_peek_0, &img_##t##_##pose##_peek_1, &img_##t##_##pose##_peek_2}, \
-    .peek_feet[BRUSHY_POSE_##POSE] = {&img_##t##_##pose##_peek_0_pivot, &img_##t##_##pose##_peek_1_pivot, \
-                                      &img_##t##_##pose##_peek_2_pivot}
-
-/** Fills in the images every theme has, from the asset naming scheme (<id>_idle, ...). */
-#define BRUSHY_THEME_IMAGES(t) \
-    .poses[BRUSHY_POSE_IDLE] = &img_##t##_idle, \
-    .poses[BRUSHY_POSE_BLINK] = &img_##t##_blink, \
-    .poses[BRUSHY_POSE_SLEEPY] = &img_##t##_sleepy, \
-    .poses[BRUSHY_POSE_BRUSH_A] = &img_##t##_brush_a, \
-    .poses[BRUSHY_POSE_BRUSH_B] = &img_##t##_brush_b, \
-    .poses[BRUSHY_POSE_CHEER] = &img_##t##_cheer, \
-    .poses[BRUSHY_POSE_GRIN] = &img_##t##_grin, \
-    .germs = {&img_##t##_germ_0, &img_##t##_germ_1, &img_##t##_germ_2, &img_##t##_germ_3}, \
-    .germs_scared = {&img_##t##_germ_scared_0, &img_##t##_germ_scared_1, \
-                     &img_##t##_germ_scared_2, &img_##t##_germ_scared_3}, \
-    .germ_tilts = {BRUSHY_GERM_TILT_FRAMES(t, 0), BRUSHY_GERM_TILT_FRAMES(t, 1), \
-                   BRUSHY_GERM_TILT_FRAMES(t, 2), BRUSHY_GERM_TILT_FRAMES(t, 3)}, \
-    BRUSHY_PEEK_FRAMES(t, idle, IDLE), BRUSHY_PEEK_FRAMES(t, blink, BLINK), \
-    BRUSHY_PEEK_FRAMES(t, brush_a, BRUSH_A), BRUSHY_PEEK_FRAMES(t, brush_b, BRUSH_B), \
-    .reward = &img_##t##_reward, \
-    .bravo = &img_##t##_bravo, \
-    .clock_digits = {&img_##t##_clock_digit_0, &img_##t##_clock_digit_1, &img_##t##_clock_digit_2, \
-                     &img_##t##_clock_digit_3, &img_##t##_clock_digit_4, &img_##t##_clock_digit_5, \
-                     &img_##t##_clock_digit_6, &img_##t##_clock_digit_7, &img_##t##_clock_digit_8, \
-                     &img_##t##_clock_digit_9, &img_##t##_clock_digit_colon}, \
-    .sparkle = &img_##t##_sparkle
-
+/** The themes built in (generated themes.c), in long-press order */
 extern const brushy_theme_t * const brushy_themes[];
 extern const uint32_t brushy_theme_count;
