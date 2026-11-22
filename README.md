@@ -58,7 +58,8 @@ To try it on a phone/tablet on the same Wi-Fi, open `http://<your-mac-ip>:8123/p
 
 The panel under the device is for development only: speed (1×/10×/30×), theme picker,
 tricks (play one now; those the theme doesn't have are greyed out), sound, skip-to-end, reset,
-low battery warning.
+low battery warning, USB plugged in or not (plugging in shows the battery level, and a cable
+under the device).
 
 Preview a state directly with a URL parameter:
 
@@ -66,6 +67,7 @@ Preview a state directly with a URL parameter:
 index.html?theme=dragon&preview=idle | sleepy | brushing&t=50 | done
           &trick=peek | peekSide | slide | mine | xp | rainbow | fly | mirror | shake
           &battery=18   (charge at boot: 25 or less shows the low battery warning)
+          &charging=62  (plugs in USB with that charge)
 ```
 
 ### Prototype layout
@@ -130,6 +132,7 @@ Options:
                            mine | xp | rainbow | fly | mirror | shake
 --mute                     no sound
 --battery 18               battery charge at boot: 25 or less shows the low battery warning
+--charging 62              show the battery level as when USB is plugged in
 --zoom 0.5                 smaller window, closer to the real 4.4 cm panel size
 --snapshot out.bmp --after 1500   save a screenshot after 1.5 s and quit
 ```
@@ -179,6 +182,12 @@ areas to even coordinates, which the panel needs), the CST9217 touch, the ES8311
 codec and the LVGL task. `main/hal_esp32.c` implements `brushy_hal.h`: sounds are
 rendered by an audio task and played through the speaker, settings go to NVS.
 
+Battery and power come from the AXP2101 power chip. At boot on battery, 25% or less shows the
+low battery warning. Plugging in USB shows the battery level with a charging bolt for 5 s
+(`main.c` checks for USB power every 500 ms). The chip also switches the device on when USB is
+plugged in while it's off; it then shows the level as well. The buddy wakes up, and the power-off
+countdown starts again.
+
 ### Build and flash (macOS)
 
 Needs ESP-IDF 5.5 with the ESP32-S3 toolchain (`~/esp/esp-idf/install.sh esp32s3`, once).
@@ -227,8 +236,10 @@ idf.py -B build_bench -D SDKCONFIG=build_bench/sdkconfig \
 
 ### Still to do
 
-- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`), and the
-  low battery warning with a battery plugged in (the boot log prints `battery NN%`).
+- Try it on the board: touch orientation, sound volume (`VOLUME` in `hal_esp32.c`), the
+  low battery warning with a battery plugged in (the boot log prints `battery NN%`), and the
+  battery level when USB is plugged in, while on and while off (the boot log prints what
+  switched it on).
 - Frame rate of the tricks that rotate the whole buddy (slide, mining, flying: down to
   13-16 FPS at their biggest moments) and of Glory's sleepy breathing (40-50 FPS).
 - Power: dim or switch off the screen while the buddy sleeps (it powers off 10 s after the

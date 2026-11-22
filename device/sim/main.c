@@ -2,12 +2,13 @@
  * Desktop simulator: runs the device UI in a 466x466 SDL window.
  *
  *   brushy_sim [--theme ID] [--speed N] [--preview STATE[:SECONDS]] [--trick NAME] [--mute]
- *              [--battery PERCENT] [--zoom F] [--snapshot FILE.bmp [--after MS]]
+ *              [--battery PERCENT] [--charging PERCENT] [--zoom F] [--snapshot FILE.bmp [--after MS]]
  *
  * ID is minecraft | dragon (default: the last one used; long-press to switch).
  * STATE is idle | sleepy | brushing | done (e.g. --preview brushing:50).
  * NAME is peek | peek_side | slide | mine | xp | rainbow | fly | mirror | shake: play it right away.
  * --battery reports that charge at boot, as the device does (warns at 25% or below).
+ * --charging shows that charge as when USB is plugged in.
  * --snapshot renders the screen to a BMP after MS milliseconds and exits.
  */
 #define SDL_MAIN_HANDLED
@@ -97,7 +98,7 @@ int main(int argc, char ** argv)
     const char * trick = NULL;
     const char * snapshot = NULL;
     uint32_t snapshot_after = 1500;
-    int battery = -1;
+    int battery = -1, charging = -1;
     bool mute = false;
     static char preview_buf[32];
 
@@ -111,6 +112,7 @@ int main(int argc, char ** argv)
         else if(!strcmp(a, "--theme") && next) theme = argv[++i];
         else if(!strcmp(a, "--trick") && next) trick = argv[++i];
         else if(!strcmp(a, "--battery") && next) battery = atoi(argv[++i]);
+        else if(!strcmp(a, "--charging") && next) charging = atoi(argv[++i]);
         else if(!strcmp(a, "--mute")) mute = true;
         else if(!strcmp(a, "--preview") && next) {
             snprintf(preview_buf, sizeof(preview_buf), "%s", argv[++i]);
@@ -124,7 +126,7 @@ int main(int argc, char ** argv)
         else {
             fprintf(stderr,
                     "usage: %s [--theme ID] [--speed N] [--preview STATE[:SECONDS]] [--trick NAME]\n"
-                    "          [--mute] [--battery PERCENT] [--zoom F]\n"
+                    "          [--mute] [--battery PERCENT] [--charging PERCENT] [--zoom F]\n"
                     "          [--snapshot FILE.bmp [--after MS]]\n", argv[0]);
             return 1;
         }
@@ -150,6 +152,7 @@ int main(int argc, char ** argv)
         return 1;
     }
     brushy_ui_battery(battery);
+    brushy_ui_charging(charging);
     add_round_mask();
 
     const uint32_t started = SDL_GetTicks();

@@ -31,9 +31,11 @@
 #define CLOCK_Y       88 /* centre of the countdown: the free band above the buddy's head */
 #define CLOCK_OPA     82 /* about 32 % */
 
-#define BATTERY_WARN_MS 5000
+#define BATTERY_SHOW_MS 5000
 #define BATTERY_FADE_MS 400
+#define BATTERY_FILL_MS 900 /* plugged in: the bar fills up to the level */
 #define BATTERY_RED     0xff3b30
+#define BATTERY_GREEN   0x34c759
 
 #define LOOP_MS       33
 #define BRUSH_SWAP_MS 280
@@ -55,6 +57,9 @@ static const brushy_note_t SND_FINISH[] = {
 };
 static const brushy_note_t SND_LOW_BATTERY[] = {
     {660, 0, 140, BRUSHY_WAVE_TRIANGLE, 50}, {0, 0, 40, BRUSHY_WAVE_TRIANGLE, 0}, {440, 330, 300, BRUSHY_WAVE_TRIANGLE, 50},
+};
+static const brushy_note_t SND_CHARGING[] = { /* the low battery notes, rising */
+    {440, 0, 120, BRUSHY_WAVE_TRIANGLE, 50}, {0, 0, 40, BRUSHY_WAVE_TRIANGLE, 0}, {660, 880, 260, BRUSHY_WAVE_TRIANGLE, 50},
 };
 static const brushy_note_t SND_GIGGLE[] = {
     {880, 0, 60, BRUSHY_WAVE_SQUARE, 20}, {988, 0, 60, BRUSHY_WAVE_SQUARE, 20},
@@ -629,18 +634,22 @@ static void bravo_in(void)
     lv_anim_start(&a);
 }
 
-/* ---------- Low battery warning ---------- */
+/* ---------- Battery level: low at boot, or plugged in ---------- */
 
 static void exec_opa(void * obj, int32_t v) { lv_obj_set_style_opa(obj, (lv_opa_t)v, 0); }
 static void exec_bg_opa(void * obj, int32_t v) { lv_obj_set_style_bg_opa(obj, (lv_opa_t)v, 0); }
+static void exec_width(void * obj, int32_t v) { lv_obj_set_width(obj, v); }
 static void delete_done_cb(lv_anim_t * a) { lv_obj_delete(a->var); }
 
-static void battery_warning_close(lv_obj_t * warning)
+static lv_obj_t * battery_shown;   /* the battery on screen, if any */
+static lv_timer_t * battery_timer; /* closes it */
+
+static void battery_close(void)
 {
-    if(lv_anim_get(warning, exec_opa)) return; /* already fading out */
+    if(!battery_shown || lv_anim_get(battery_shown, exec_opa)) return; /* gone, or already fading out */
     lv_anim_t a;
     lv_anim_init(&a);
-    lv_anim_set_var(&a, warning);
+    lv_anim_set_var(&a, battery_shown);
     lv_anim_set_exec_cb(&a, exec_opa);
     lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_TRANSP);
     lv_anim_set_duration(&a, BATTERY_FADE_MS);
@@ -648,23 +657,46 @@ static void battery_warning_close(lv_obj_t * warning)
     lv_anim_start(&a);
 }
 
-static void battery_warning_tap_cb(lv_event_t * e) { battery_warning_close(lv_event_get_target(e)); }
-static void battery_warning_timer_cb(lv_timer_t * t) { battery_warning_close(lv_timer_get_user_data(t)); }
-
-/* A big battery with a blinking red sliver and the percentage, over the dimmed buddy. It sits on
- * the screen above the stage, so it swallows taps and survives a theme change. */
-static void battery_warning(int percent)
+static void battery_tap_cb(lv_event_t * e)
 {
-    lv_obj_t * warning = lv_obj_create(ui.screen);
-    lv_obj_remove_style_all(warning);
-    lv_obj_remove_flag(warning, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(warning, SCREEN_SIZE, SCREEN_SIZE);
-    lv_obj_set_style_bg_color(warning, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(warning, LV_OPA_80, 0);
-    lv_obj_add_event_cb(warning, battery_warning_tap_cb, LV_EVENT_CLICKED, NULL);
+    LV_UNUSED(e);
+    battery_close();
+}
+
+static void battery_timer_cb(lv_timer_t * t)
+{
+    LV_UNUSED(t);
+    battery_timer = NULL; /* LVGL deletes it after this run */
+    battery_close();
+}
+
+static void battery_deleted_cb(lv_event_t * e)
+{
+    LV_UNUSED(e);
+    if(battery_timer) lv_timer_delete(battery_timer); /* closed by a tap, or replaced */
+    battery_timer = NULL;
+    battery_shown = NULL;
+}
+
+/* A big battery with the percentage, over the dimmed buddy: a blinking red sliver when low, or a
+ * green bar filling up to the level and a charging bolt when plugged in. It sits on the screen
+ * above the stage, so it swallows taps and survives a theme change. */
+static void battery_show(int percent, bool charging)
+{
+    if(battery_shown) lv_obj_delete(battery_shown);
+    const lv_color_t color = lv_color_hex(charging ? BATTERY_GREEN : BATTERY_RED);
+
+    lv_obj_t * overlay = lv_obj_create(ui.screen);
+    lv_obj_remove_style_all(overlay);
+    lv_obj_remove_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(overlay, SCREEN_SIZE, SCREEN_SIZE);
+    lv_obj_set_style_bg_color(overlay, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(overlay, LV_OPA_80, 0);
+    lv_obj_add_event_cb(overlay, battery_tap_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(overlay, battery_deleted_cb, LV_EVENT_DELETE, NULL);
 
     const int32_t w = 170, h = 86, border = 8, pad = 6, nub_w = 14, nub_h = 36;
-    lv_obj_t * body = ui_plain_obj(warning);
+    lv_obj_t * body = ui_plain_obj(overlay);
     lv_obj_set_size(body, w, h);
     lv_obj_align(body, LV_ALIGN_CENTER, -nub_w / 2, -30);
     lv_obj_set_style_radius(body, 14, 0);
@@ -672,39 +704,49 @@ static void battery_warning(int percent)
     lv_obj_set_style_border_color(body, lv_color_white(), 0);
     lv_obj_set_style_border_opa(body, LV_OPA_COVER, 0);
 
-    lv_obj_t * nub = ui_plain_obj(warning);
+    lv_obj_t * nub = ui_plain_obj(overlay);
     lv_obj_set_size(nub, nub_w, nub_h);
     lv_obj_align_to(nub, body, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
     lv_obj_set_style_radius(nub, 5, 0);
     lv_obj_set_style_bg_color(nub, lv_color_white(), 0);
     lv_obj_set_style_bg_opa(nub, LV_OPA_COVER, 0);
 
-    const int32_t inside = w - 2 * (border + pad);
+    const int32_t inside = w - 2 * (border + pad), level = LV_MAX(inside * percent / 100, 12);
     lv_obj_t * fill = ui_plain_obj(body);
-    lv_obj_set_size(fill, LV_MAX(inside * percent / 100, 12), h - 2 * (border + pad));
+    lv_obj_set_size(fill, level, h - 2 * (border + pad));
     lv_obj_align(fill, LV_ALIGN_LEFT_MID, pad, 0);
     lv_obj_set_style_radius(fill, 5, 0);
-    lv_obj_set_style_bg_color(fill, lv_color_hex(BATTERY_RED), 0);
+    lv_obj_set_style_bg_color(fill, color, 0);
     lv_obj_set_style_bg_opa(fill, LV_OPA_COVER, 0);
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, fill);
-    lv_anim_set_exec_cb(&a, exec_bg_opa);
-    lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_20);
-    lv_anim_set_duration(&a, 450);
-    lv_anim_set_reverse_duration(&a, 450);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    if(charging) {
+        lv_anim_set_exec_cb(&a, exec_width);
+        lv_anim_set_values(&a, 0, level);
+        lv_anim_set_duration(&a, BATTERY_FILL_MS);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    }
+    else {
+        lv_anim_set_exec_cb(&a, exec_bg_opa);
+        lv_anim_set_values(&a, LV_OPA_COVER, LV_OPA_20);
+        lv_anim_set_duration(&a, 450);
+        lv_anim_set_reverse_duration(&a, 450);
+        lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    }
     lv_anim_start(&a);
 
-    lv_obj_t * label = lv_label_create(warning);
-    lv_label_set_text_fmt(label, "%d%%", percent);
+    lv_obj_t * label = lv_label_create(overlay);
+    lv_label_set_text_fmt(label, charging ? LV_SYMBOL_CHARGE " %d%%" : "%d%%", percent);
     lv_obj_set_style_text_font(label, &lv_font_montserrat_40, 0);
-    lv_obj_set_style_text_color(label, lv_color_hex(BATTERY_RED), 0);
+    lv_obj_set_style_text_color(label, color, 0);
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 60);
 
-    lv_timer_t * t = lv_timer_create(battery_warning_timer_cb, BATTERY_WARN_MS, warning);
-    lv_timer_set_repeat_count(t, 1);
-    SOUND(SND_LOW_BATTERY);
+    battery_shown = overlay;
+    battery_timer = lv_timer_create(battery_timer_cb, BATTERY_SHOW_MS, NULL);
+    lv_timer_set_repeat_count(battery_timer, 1);
+    if(charging) SOUND(SND_CHARGING);
+    else SOUND(SND_LOW_BATTERY);
 }
 
 /* ---------- Phases ---------- */
@@ -911,7 +953,17 @@ void brushy_ui_create(lv_obj_t * screen)
 
 void brushy_ui_battery(int percent)
 {
-    if(percent >= 0 && percent <= BRUSHY_LOW_BATTERY) battery_warning(percent);
+    if(percent >= 0 && percent <= BRUSHY_LOW_BATTERY) battery_show(percent, false);
+}
+
+void brushy_ui_charging(int percent)
+{
+    if(percent < 0 || percent > 100) return;
+    if(ui.phase != PHASE_BRUSHING) { /* plugging in wakes the buddy, and the power-off countdown restarts */
+        ui.phase_since = lv_tick_get();
+        if(ui.mood == MOOD_SLEEPY) ui_set_mood(MOOD_IDLE);
+    }
+    battery_show(percent, true);
 }
 
 bool brushy_ui_set_theme(const char * id)
