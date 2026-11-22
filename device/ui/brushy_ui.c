@@ -827,6 +827,14 @@ static void update_brushing(void)
 
 /* ---------- Theme ---------- */
 
+/* The theme is saved as a hash of its id: adding a theme doesn't change the one that comes back */
+static uint32_t theme_key(const brushy_theme_t * theme)
+{
+    uint32_t h = 2166136261u; /* FNV-1a */
+    for(const char * c = theme->id; *c; c++) h = (h ^ (uint8_t)*c) * 16777619u;
+    return h;
+}
+
 /* Rebuilds every widget for `theme`. Only called on the start screen. */
 static void load_theme(const brushy_theme_t * theme)
 {
@@ -855,9 +863,7 @@ static void load_theme(const brushy_theme_t * theme)
     to_idle();
     update_pose(lv_tick_get());
 
-    for(uint32_t i = 0; i < brushy_theme_count; i++) {
-        if(brushy_themes[i] == theme) brushy_hal_save("theme", i);
-    }
+    brushy_hal_save("theme", theme_key(theme));
 }
 
 static void next_theme(void)
@@ -945,7 +951,11 @@ void brushy_ui_create(lv_obj_t * screen)
     }
 
     uint32_t saved = brushy_hal_load("theme", 0);
-    load_theme(brushy_themes[saved < brushy_theme_count ? saved : 0]);
+    const brushy_theme_t * theme = brushy_themes[0];
+    for(uint32_t i = 0; i < brushy_theme_count; i++) {
+        if(theme_key(brushy_themes[i]) == saved) theme = brushy_themes[i];
+    }
+    load_theme(theme);
 
     ui.last_tick = lv_tick_get();
     lv_timer_create(loop_cb, LOOP_MS, NULL);

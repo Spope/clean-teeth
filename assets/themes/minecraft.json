@@ -1,0 +1,25 @@
+{
+  "_note": "exported from prototype/themes/minecraft.js by tools/export_assets.sh: edit the theme, not this file",
+  "id": "minecraft",
+  "name": "Minecraft · Steve",
+  "style": "blocky",
+  "accent": "#7ac943",
+  "ring": ["#7ac943", "#f9d71c", "#5ce1e6", "#e23c3c"],
+  "sound": {
+    "voice": "square",
+    "pop": "blip"
+  },
+  "pop": "creeper",
+  "tricks": ["mine", "xp"],
+  "teeth": [125, 114],
+  "mouth": [125, 114],
+  "germParticles": [
+    ["#5dbb3a", "#79d24f", "#4a9c2c", "#10200c"],
+    ["#5fa896", "#4a8a7a", "#2c4a3a"],
+    ["#6cc45c", "#93e283", "#b5f0a8"],
+    ["#3b3535", "#2a2525", "#e0383e"]
+  ],
+  "sway": false,
+  "poses": ["idle", "blink", "sleepy", "brush_a", "brush_b", "cheer", "grin", "mine_a", "mine_b", "mine_brush_a", "mine_brush_b"],
+  "sprites": ["sparkle", "block", "block_cracked", "xp_orb"]
+}

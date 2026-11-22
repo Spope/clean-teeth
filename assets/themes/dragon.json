@@ -1,0 +1,25 @@
+{
+  "_note": "exported from prototype/themes/dragon.js by tools/export_assets.sh: edit the theme, not this file",
+  "id": "dragon",
+  "name": "Royaumes de feu · Glory",
+  "style": "round",
+  "accent": "#3fbfa0",
+  "ring": ["#3fbfa0", "#ffd23f", "#ff7ac2", "#6fa8ff"],
+  "sound": {
+    "voice": "triangle",
+    "pop": "whoosh"
+  },
+  "pop": "venom",
+  "tricks": ["rainbow", "fly"],
+  "teeth": [125, 101],
+  "mouth": [125, 104],
+  "germParticles": [
+    ["#8a5cff", "#1b1426", "#5dd94a"],
+    ["#ff5fa2", "#1b1426", "#5dd94a"],
+    ["#9be15d", "#1b1426", "#5dd94a"],
+    ["#ff9f43", "#1b1426", "#5dd94a"]
+  ],
+  "sway": true,
+  "poses": ["idle", "blink", "sleepy", "brush_a", "brush_b", "cheer", "grin", "spit", "fly_a", "fly_b", "rainbow_1", "rainbow_2", "rainbow_3", "rainbow_4", "rainbow_5"],
+  "sprites": ["sparkle", "venom"]
+}

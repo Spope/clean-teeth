@@ -13,11 +13,13 @@ and the simulator; each device is built with one of them):
   caterpillar, spider), gems as rewards, venom "fwoosh" pops.
 
 ```
-prototype/     Phase 1: browser prototype, and the source of all artwork (SVG)
-assets/png/    artwork exported from the prototype for the device
+prototype/     Phase 1: browser prototype, and the source of all themes and artwork (SVG)
+assets/        themes exported from the prototype for the device (PNGs + settings)
 device/ui/     Phase 2: device UI in C + LVGL (platform-independent)
 device/sim/    Phase 2: desktop simulator (SDL window)
-tools/         asset export + PNG → LVGL converter
+device/esp32/  Phase 3: firmware for the board (ESP-IDF)
+tools/         theme export + conversion to C
+docs/          how to create a theme
 ```
 
 ## Phase 1 — browser prototype
@@ -80,21 +82,21 @@ prototype/
   js/pixel.js           pixel-art helper (grid of letters -> SVG)
   js/sound.js           tiny WebAudio synth (no audio files)
   themes/
-    registry.js         theme contract (read this first)
+    registry.js         theme contract and checks (read this first)
+    _template.js        starting point for a new theme
     minecraft.js        Steve, mobs, diamond
     dragon.js           Glory, germs, gem
 ```
 
 ### Adding or changing a theme
 
-A theme bundles the buddy, germs, reward icon, colours, fonts and sound flavour
-(see `prototype/themes/registry.js`). To add one, copy `dragon.js` (vector art) or
-`minecraft.js` (pixel art), change it, and add a `<script>` tag in `prototype/index.html`.
-It joins the theme picker and the long-press cycle. To bring it to the device, see
-"Changing the artwork" below.
+A theme bundles the buddy, germs, reward icon, colours, fonts and sound flavour, in one file:
+`prototype/themes/<id>.js`. The device's images and settings are exported from it, so there is
+no C to write. **See [docs/themes.md](docs/themes.md)** to create one: copy `_template.js`,
+add a `<script>` tag in `prototype/index.html`, draw, then `tools/export_assets.sh <id>`.
 
-A buddy reacts to four mood classes set by the app: `mood-idle`, `mood-sleepy`,
-`mood-brushing`, `mood-cheer`. The tap "giggle" is handled generically.
+A buddy reacts to mood classes set by the app (`mood-idle`, `mood-sleepy`, `mood-brushing`,
+`mood-cheer`, `mood-grin`...). The tap "giggle" is handled generically.
 Glory's mood colours are CSS variables at the top of her `css` (`--scale`, `--frill`...).
 
 ### Design notes for the real screen
@@ -125,7 +127,7 @@ hold the mouse button down to switch theme.
 Options:
 
 ```
---theme dragon             minecraft | dragon (default: last used)
+--theme dragon             a theme id: minecraft | dragon | ... (default: last used)
 --speed 10                 run time 10x faster (testing)
 --preview brushing:50      start in a state: idle | sleepy | brushing[:seconds] | done
 --trick peek               play an animation right away: peek | peek_side | slide |
@@ -157,21 +159,22 @@ Rewards earned and the chosen theme are saved in `~/.brushy-buddy-sim`.
   The big countdown digits are alpha-only (A8) images, tinted with the zone colour.
 - **Sounds:** note sequences in `brushy_ui.c` played in the theme's voice, synthesized by
   `brushy_synth.c` (shared by the simulator and the board) and played by the platform layer.
-- **Themes:** `device/ui/themes/<id>.c` (colours, sound flavour; images are wired up by
-  `BRUSHY_THEME_IMAGES`), listed in `themes/themes.c`.
+- **Themes:** not written in C. The build generates each theme's `brushy_theme_t`
+  (`brushy_theme.h`) and images from what the prototype exported to `assets/`
+  (`device/ui/themes.cmake`, `tools/png2lvgl.py`). The simulator has every exported theme.
 
 ### Changing the artwork
 
 The prototype's themes are the single source. After editing one:
 
 ```sh
-tools/export_assets.sh [theme]    # renders assets/png/<theme>_*.png with headless Chrome
-cmake --build device/sim/build    # converts the PNGs to LVGL images and rebuilds
+tools/export_assets.sh [theme]    # assets/png/<theme>_*.png (headless Chrome) and assets/themes/<theme>.json
+cmake --build device/sim/build    # converts them to C and rebuilds
 ```
 
 The poses and sprites to export are read from the theme itself (`tools/theme_assets.js`).
-A new theme also needs `device/ui/themes/<id>.c` (copy `dragon.c`), an entry in
-`themes/themes.c`, and a line in `device/sim/CMakeLists.txt`.
+A new theme needs nothing more for the simulator; for the board, an `sdkconfig.<id>`
+(see [docs/themes.md](docs/themes.md)).
 
 ## Phase 3 — on the real board (current)
 
@@ -192,8 +195,9 @@ countdown starts again.
 
 Needs ESP-IDF 5.5 with the ESP32-S3 toolchain (`~/esp/esp-idf/install.sh esp32s3`, once).
 
-Each device has one theme, and only its artwork goes into the firmware. Build each in its
-own folder (the first build downloads the components):
+Each device has one theme, and only its artwork goes into the firmware: `sdkconfig.<id>` sets
+it (`CONFIG_BRUSHY_THEME="<id>"`). Build each in its own folder (the first build downloads the
+components):
 
 ```sh
 . ~/esp/esp-idf/export.sh

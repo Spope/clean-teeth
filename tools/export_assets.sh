@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Render each theme's artwork (prototype/themes/<id>.js) to PNGs in assets/png
-# with headless Chrome. The device build converts these PNGs to LVGL C images
-# (tools/png2lvgl.py).
+# Export each theme (prototype/themes/<id>.js) for the device: its artwork, rendered to PNGs
+# in assets/png with headless Chrome, and its settings (colours, sounds, tricks...) to
+# assets/themes/<id>.json. The device build turns both into C (tools/png2lvgl.py).
 #
 # Usage: tools/export_assets.sh [theme ...]   (default: every theme)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PNG_DIR="$ROOT/assets/png"
+THEME_DIR="$ROOT/assets/themes"
 CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 PROFILE="$(mktemp -d)"
 trap 'rm -rf "$PROFILE"' EXIT
@@ -19,11 +20,14 @@ if [ $# -gt 0 ]; then
 else
   THEMES=()
   for f in "$ROOT"/prototype/themes/*.js; do
-    [ "$(basename "$f")" = registry.js ] || THEMES+=("$(basename "$f" .js)")
+    case "$(basename "$f")" in
+      registry.js | _*) ;; # not themes (_template.js is the starting point for new ones)
+      *) THEMES+=("$(basename "$f" .js)") ;;
+    esac
   done
 fi
 
-mkdir -p "$PNG_DIR"
+mkdir -p "$PNG_DIR" "$THEME_DIR"
 
 shot() { # width height output-name query
   local out="$PNG_DIR/$3.png"
@@ -37,6 +41,9 @@ shot() { # width height output-name query
 }
 
 for t in "${THEMES[@]}"; do
+  settings="$(node "$ROOT/tools/theme_assets.js" "$t" json)" # stops here if the theme has problems
+  printf '%s\n' "$settings" > "$THEME_DIR/$t.json"
+  echo "wrote assets/themes/$t.json"
   rm -f "$PNG_DIR/${t}_"*.png
   # Poses and sprites are listed by the theme itself
   while read -r kind name w h; do

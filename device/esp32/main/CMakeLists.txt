@@ -9,30 +9,16 @@ idf_component_register(
         ${UI_DIR}/brushy_fx.c
         ${UI_DIR}/brushy_tricks.c
         ${UI_DIR}/brushy_synth.c
-        ${UI_DIR}/themes/themes.c
-        ${UI_DIR}/themes/${CONFIG_BRUSHY_THEME}.c
     INCLUDE_DIRS . ${UI_DIR}
     PRIV_REQUIRES nvs_flash esp_psram esp_driver_i2c)
 
-# One theme per device (menuconfig: Brushy Buddy > Theme): its code and images only
-target_compile_definitions(${COMPONENT_LIB} PRIVATE BRUSHY_THEME=${CONFIG_BRUSHY_THEME})
-
-# Images: assets/png/<theme>_*.png -> LVGL C arrays (kept in flash), regenerated when a PNG changes
+# One theme per device (menuconfig: Brushy Buddy > Theme): only its artwork goes into the
+# firmware, as C generated from assets/ (images are kept in flash), again when it changes
+include(${UI_DIR}/themes.cmake)
 idf_build_get_property(python PYTHON)
-file(GLOB ASSET_PNGS CONFIGURE_DEPENDS ${REPO_ROOT}/assets/png/${CONFIG_BRUSHY_THEME}_*.png)
 set(ASSET_DIR ${CMAKE_CURRENT_BINARY_DIR}/assets)
-set(ASSET_SRCS)
-foreach(png ${ASSET_PNGS})
-    get_filename_component(stem ${png} NAME_WE)
-    list(APPEND ASSET_SRCS ${ASSET_DIR}/img_${stem}.c)
-endforeach()
-add_custom_command(
-    OUTPUT ${ASSET_SRCS} ${ASSET_DIR}/assets.h
-    COMMAND ${python} ${REPO_ROOT}/tools/png2lvgl.py ${ASSET_DIR} ${ASSET_PNGS}
-    DEPENDS ${ASSET_PNGS} ${REPO_ROOT}/tools/png2lvgl.py
-    COMMENT "Converting PNG assets to LVGL images"
-    VERBATIM)
-add_custom_target(brushy_assets DEPENDS ${ASSET_SRCS} ${ASSET_DIR}/assets.h)
+brushy_theme_sources(THEME_SRCS ${ASSET_DIR} ${python} ${CONFIG_BRUSHY_THEME})
+add_custom_target(brushy_assets DEPENDS ${THEME_SRCS})
 add_dependencies(${COMPONENT_LIB} brushy_assets)
-target_sources(${COMPONENT_LIB} PRIVATE ${ASSET_SRCS})
+target_sources(${COMPONENT_LIB} PRIVATE ${THEME_SRCS})
 target_include_directories(${COMPONENT_LIB} PRIVATE ${ASSET_DIR})
