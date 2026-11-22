@@ -1,16 +1,32 @@
 {{- /*
-  Hugo shortcode: the Brushy Buddy simulator in a post. Copy this file to your site's
-  layouts/_shortcodes/ (layouts/shortcodes/ before Hugo 0.146), and the simulator
-  (tools/build_web.sh) to static/brushy-sim/.
+  Hugo shortcode: the Brushy Buddy simulator in a post, with its device and control panel.
+  Copy this file to your site's layouts/_shortcodes/ (layouts/shortcodes/ before Hugo 0.146),
+  and the simulator (tools/build_web.sh) to static/brushy-sim/.
 
     {{< brushy-sim theme="dragon" >}}
-    {{< brushy-sim theme="minecraft" preview="brushing:40" size="300" >}}
+    {{< brushy-sim theme="minecraft" preview="brushing:40" size="400" >}}
 
   Options as on the simulator's command line: theme, preview, trick, speed, battery,
-  charging, mute="true"; and size, its width in pixels at most (default 466, the real screen).
+  charging, mute="true"; and size, its width in pixels at most (default 560: the device at
+  the real screen's size, 466 px, with its bezel and margins).
 */ -}}
-{{- $size := .Get "size" | default 466 -}}
+{{- $size := .Get "size" | default 560 -}}
 <iframe src="{{ printf "brushy-sim/?%s" (querify .Params) | relURL }}"
-        title="Brushy Buddy simulator" loading="lazy"
-        style="display: block; margin: 1.5rem auto; border: 0; border-radius: 50%;
-               width: 100%; max-width: {{ $size }}px; height: auto; aspect-ratio: 1"></iframe>
+        class="brushy-sim" title="Brushy Buddy simulator" loading="lazy"
+        style="display: block; margin: 1.5rem auto; border: 0;
+               width: 100%; max-width: {{ $size }}px; aspect-ratio: 560 / 832"></iframe>
+<script>
+  /* The simulator says how tall it is (its control panel wraps on narrow screens) */
+  if (!window.brushySimHeights) {
+    window.brushySimHeights = true;
+    addEventListener('message', (e) => {
+      if (!e.data || !e.data.brushySimHeight) return;
+      for (const frame of document.querySelectorAll('iframe.brushy-sim')) {
+        if (frame.contentWindow === e.source) {
+          frame.style.aspectRatio = 'auto';
+          frame.style.height = e.data.brushySimHeight + 'px';
+        }
+      }
+    });
+  }
+</script>

@@ -168,7 +168,10 @@ int main(int argc, char ** argv)
     add_round_mask();
 
 #ifdef __EMSCRIPTEN__
-    SDL_EventState(SDL_MOUSEWHEEL, SDL_IGNORE); /* lets the wheel scroll the page around it */
+    /* The page keeps the keyboard (its control panel) and the wheel (scrolling) */
+    SDL_EventState(SDL_KEYDOWN, SDL_IGNORE);
+    SDL_EventState(SDL_KEYUP, SDL_IGNORE);
+    SDL_EventState(SDL_MOUSEWHEEL, SDL_IGNORE);
     emscripten_set_main_loop(web_frame, 0, true);
 #endif
     const uint32_t started = SDL_GetTicks();

@@ -9,7 +9,7 @@
 #include "brushy_ui.h"
 #include "brushy_hal.h"
 
-#define TOTAL_MS        120000
+#define TOTAL_MS        (BRUSHY_BRUSHING_SECONDS * 1000)
 #define ZONES           4
 #define GERMS_PER_ZONE  3
 #define GERM_COUNT      (ZONES * GERMS_PER_ZONE)
@@ -116,6 +116,7 @@ void fx_clear(void);
 typedef enum { TRICK_PEEK, TRICK_PEEK_SIDE, TRICK_SLIDE, TRICK_MINE, TRICK_RAINBOW, TRICK_FLY, TRICK_XP, TRICK_COUNT } trick_t;
 void tricks_schedule(void);
 void tricks_update(uint32_t now); /* starts a random trick when it's time */
+bool tricks_available(trick_t trick); /* the theme has it */
 bool tricks_start(trick_t trick); /* false if the theme doesn't have it */
 void tricks_stop(void);
 bool tricks_active(void);

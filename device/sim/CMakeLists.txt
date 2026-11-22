@@ -53,12 +53,17 @@ set_source_files_properties(main.c hal_sim.c ${UI_DIR}/brushy_ui.c ${UI_DIR}/bru
     ${UI_DIR}/brushy_tricks.c ${UI_DIR}/brushy_synth.c ${ASSET_DIR}/themes.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra")
 
-# In a browser: brushy_sim.js + brushy_sim.wasm, started by web/index.html (copied next to them)
+# In a browser: brushy_sim.js + brushy_sim.wasm, started by web/index.html, which looks like
+# the prototype (its device and control panel: device.css). Both are copied next to them.
 if(EMSCRIPTEN)
+    target_sources(brushy_sim PRIVATE web.c)
+    set_source_files_properties(web.c PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra")
     set_target_properties(brushy_sim PROPERTIES SUFFIX ".js")
     target_link_options(brushy_sim PRIVATE
         -sALLOW_MEMORY_GROWTH  # LVGL's image cache holds MBs
         -sENVIRONMENT=web
-        -sEXIT_RUNTIME)        # an error (unknown theme...) reaches the page's onExit
+        -sEXIT_RUNTIME         # an error (unknown theme...) reaches the page's onExit
+        -sEXPORTED_RUNTIME_METHODS=cwrap)
     configure_file(web/index.html ${CMAKE_BINARY_DIR}/index.html COPYONLY)
+    configure_file(${REPO_ROOT}/prototype/css/device.css ${CMAKE_BINARY_DIR}/device.css COPYONLY)
 endif()

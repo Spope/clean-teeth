@@ -987,16 +987,35 @@ bool brushy_ui_set_theme(const char * id)
     return false;
 }
 
-bool brushy_ui_trick(const char * name)
+const brushy_theme_t * brushy_ui_theme(void)
+{
+    return ui.theme;
+}
+
+/* The trick called `name`, TRICK_COUNT if it's not one (mirror and shake are effects) */
+static trick_t trick_named(const char * name)
 {
     static const char * const names[TRICK_COUNT] = {"peek", "peek_side", "slide", "mine", "rainbow", "fly", "xp"};
-    for(int i = 0; i < TRICK_COUNT; i++) {
-        if(strcmp(name, names[i]) == 0) return tricks_start((trick_t)i);
-    }
+    trick_t i = 0;
+    while(i < TRICK_COUNT && strcmp(name, names[i]) != 0) i++;
+    return i;
+}
+
+bool brushy_ui_trick(const char * name)
+{
+    trick_t trick = trick_named(name);
+    if(trick < TRICK_COUNT) return tricks_start(trick);
     if(strcmp(name, "mirror") == 0) fx_mirror_check();
     else if(strcmp(name, "shake") == 0) fx_shake();
     else return false;
     return true;
+}
+
+bool brushy_ui_has_trick(const char * name)
+{
+    trick_t trick = trick_named(name);
+    if(trick < TRICK_COUNT) return tricks_available(trick);
+    return strcmp(name, "mirror") == 0 || strcmp(name, "shake") == 0;
 }
 
 void brushy_ui_set_speed(float speed)
@@ -1007,7 +1026,10 @@ void brushy_ui_set_speed(float speed)
 void brushy_ui_preview(const char * state, float seconds)
 {
     ui.quiet = true;
-    if(strcmp(state, "sleepy") == 0) {
+    if(strcmp(state, "idle") == 0) {
+        to_idle();
+    }
+    else if(strcmp(state, "sleepy") == 0) {
         ui_set_mood(MOOD_SLEEPY);
     }
     else if(strcmp(state, "brushing") == 0) {
@@ -1024,4 +1046,18 @@ void brushy_ui_preview(const char * state, float seconds)
     }
     update_pose(lv_tick_get());
     ui.quiet = false;
+}
+
+const char * brushy_ui_state(void)
+{
+    switch(ui.phase) {
+        case PHASE_BRUSHING: return "brushing";
+        case PHASE_DONE: return "done";
+        default: return ui.mood == MOOD_SLEEPY ? "sleepy" : "idle";
+    }
+}
+
+float brushy_ui_elapsed(void)
+{
+    return (ui.elapsed_ms < TOTAL_MS ? ui.elapsed_ms : TOTAL_MS) / 1000.0f;
 }

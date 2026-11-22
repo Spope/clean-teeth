@@ -1,0 +1,125 @@
+/* The simulated device and the dev panel under it: shared by the prototype and the
+   simulator's web page (device/sim/web/index.html). What the screen shows: style.css. */
+
+/* ---------- Page (dev environment) ---------- */
+:root {
+  --page-bg: #14141c;
+  --page-fg: #e8e8f0;
+  --page-muted: #8a8aa0;
+  --panel: #1e1e2a;
+  --panel-border: #2e2e3e;
+
+  /* Overridden per theme (see themes/*.js) */
+  --accent: #5bd48a;
+  --glow: rgba(91, 212, 138, 0.25);
+
+  --screen-size: 466px;
+  --bezel: 27px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--page-bg);
+  color: var(--page-fg);
+  font-family: "Fredoka", ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 16px;
+}
+
+/* ---------- Device ---------- */
+.device-slot { width: 520px; height: 520px; }
+
+.device {
+  position: relative;
+  width: calc(var(--screen-size) + 2 * var(--bezel));
+  height: calc(var(--screen-size) + 2 * var(--bezel));
+  padding: var(--bezel);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #4a4a55, #1b1b20 70%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  transform-origin: top left;
+}
+
+/* USB-C cable under the device while plugged in (dev panel) */
+.usb-cable {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: calc(100% - 2px);
+  width: 30px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.device.usb .usb-cable { display: block; }
+.usb-plug {
+  height: 15px;
+  border-radius: 3px 3px 5px 5px;
+  background: linear-gradient(90deg, #5d5d68, #b4b4c0 45%, #5d5d68);
+}
+.usb-wire {
+  width: 12px;
+  height: 12px;
+  margin: 0 auto;
+  background: linear-gradient(#44444f, transparent);
+}
+
+.screen {
+  position: relative;
+  width: var(--screen-size);
+  height: var(--screen-size);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000; /* AMOLED: black = pixels off */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* ---------- Dev panel ---------- */
+.dev {
+  width: min(520px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+.dev-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dev-label { color: var(--page-muted); width: 64px; }
+.dev output { font-variant-numeric: tabular-nums; }
+.dev-chip {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--panel-border);
+  color: var(--page-muted);
+}
+.dev button, .dev select {
+  font: inherit;
+  color: var(--page-fg);
+  background: #2a2a3a;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.dev button:hover:not(:disabled) { background: #34344a; }
+.dev button:disabled { opacity: 0.35; cursor: default; } /* a trick the theme doesn't have */
+.seg { display: flex; gap: 4px; }
+.seg button.on { background: var(--accent); color: #000; border-color: transparent; }
+.dev-check { display: flex; align-items: center; gap: 6px; margin-left: auto; }

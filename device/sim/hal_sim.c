@@ -16,13 +16,16 @@
 #define SAMPLE_RATE 44100
 
 static SDL_AudioDeviceID audio_dev;
+static bool audio_tried;
 static bool muted;
 
-void hal_sim_init(bool mute)
+static void open_audio(void)
 {
-    muted = mute;
-    if(mute || SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) return;
-
+    audio_tried = true;
+    if(SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        fprintf(stderr, "audio disabled: %s\n", SDL_GetError());
+        return;
+    }
     SDL_AudioSpec want = {0}, have;
     want.freq = SAMPLE_RATE;
     want.format = AUDIO_F32SYS;
@@ -31,6 +34,18 @@ void hal_sim_init(bool mute)
     audio_dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if(audio_dev) SDL_PauseAudioDevice(audio_dev, 0);
     else fprintf(stderr, "audio disabled: %s\n", SDL_GetError());
+}
+
+void hal_sim_init(bool mute)
+{
+    hal_sim_set_mute(mute);
+}
+
+void hal_sim_set_mute(bool mute)
+{
+    muted = mute;
+    if(!mute && !audio_tried) open_audio(); /* only when needed: no sound at all when started muted */
+    if(mute && audio_dev) SDL_ClearQueuedAudio(audio_dev);
 }
 
 void brushy_hal_play(const brushy_note_t * notes, uint32_t count)
